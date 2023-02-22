@@ -1,45 +1,70 @@
 package main
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 
-	"github.com/NguyenXuanCanh/go-starter/hello"
+	"github.com/NguyenXuanCanh/go-starter/api/packages"
+	"github.com/NguyenXuanCanh/go-starter/api/product"
+	"github.com/NguyenXuanCanh/go-starter/api/vietmap"
+	"github.com/gorilla/mux"
+
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type Account struct {
-	Email    string
-	FullName string
+type Response struct {
+	Status string `json:"status"`
+	Data   any    `json:"data"`
+}
+
+func getAllProduct(writer http.ResponseWriter, request *http.Request) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		Data:   product.GetAll(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func getAllPackage(writer http.ResponseWriter, request *http.Request) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		Data:   packages.GetAll(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+func getTest(writer http.ResponseWriter, request *http.Request) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: vietmap.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func main() {
-	hello.SayHello()
-	db, err := sql.Open("mysql", "root:xuancanh@tcp(127.0.0.1:3306)/fahasa")
-	defer db.Close()
+	router := mux.NewRouter()
+	fmt.Println("STARTED")
+	router.HandleFunc("/getAllProduct", getAllProduct).Methods("GET")
+	router.HandleFunc("/getAllPackage", getAllPackage).Methods("GET")
+	router.HandleFunc("/getTest", getTest).Methods("GET")
+	err := http.ListenAndServe("localhost:8080", router)
 
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
-
-	res, err := db.Query("SELECT Email, FullName FROM ACCOUNT")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for res.Next() {
-
-		var account Account
-		err := res.Scan(&account.Email, &account.FullName)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("%v\n", account)
-	}
-
 }
