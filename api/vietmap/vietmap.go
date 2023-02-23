@@ -29,43 +29,45 @@ func CreateData() Data {
 }
 
 type Feature struct {
-	Type     string `json:"type"`
-	geometry struct {
-		Type        string `json:"type"`
-		coordinates []int
-		properties  struct {
-			layer        string
-			name         string
-			housenumber  string
-			street       string
-			distance     int
-			accuracy     string
-			region       string
-			region_gid   string
-			county       string
-			county_gid   string
-			locality     string
-			locality_gid string
-			label        string
-			address      string
-			addendum     struct{}
-			block        int
-			floor        int
-		}
+	Type     string
+	Geometry struct {
+		Type        string
+		Coordinates []float64
 	}
+	Properties struct {
+		Layer        string
+		Name         string
+		Housenumber  string
+		Street       string
+		Distance     float64
+		Accuracy     string
+		Region       string
+		Region_gid   string
+		County       string
+		County_gid   string
+		Locality     string
+		Locality_gid string
+		Label        string
+		Address      string
+		Addendum     struct{}
+		Block        int
+		Floor        int
+	}
+	Bbox []float64
+	Id   string
 }
 
 type Address struct {
-	features []Feature
-	Type     string `json:"type"`
-	bbox     []int
+	Features []Feature
+	Type     string
+	bbox     []float64
 	License  string
 }
 
 type MapType struct {
-	data    any
-	message string
-	code    string
+	Code    string
+	Message string
+	Data    Address
 }
 
 func create_distance_matrix(data Data) any {
@@ -101,35 +103,35 @@ func send_request(str string) any {
 	stringReq := strings.Replace(str, " ", "%20", -1)
 	url := "https://maps.vietmap.vn/api/search?api-version=1.1&apikey=" + config.API_KEY + "&text=" + stringReq
 	res, err := http.Get(url)
-
+	fmt.Println(url)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	var data any
-	json.Unmarshal([]byte(body), &data)
-	fmt.Println(data)
-	return data
-}
-
-func send_request_distance_matrix(origin_address string, dest_address string) any {
-	// stringReq := strings.Replace(str, " ", "%20", -1)
-	url := "https://rsapi.goong.io/trip?origin=" + origin_address + "&waypoints=" + dest_address + "&api_key=" + config.API_KEY
-	res, err := http.Get(url)
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
 	var data MapType
-	json.Unmarshal([]byte(body), &data)
-	fmt.Println(data.data)
+	json.Unmarshal(body, &data)
+	fmt.Println(data)
 	return data
 }
+
+// func send_request_distance_matrix(origin_address string, dest_address string) any {
+// 	// stringReq := strings.Replace(str, " ", "%20", -1)
+// 	url := "https://rsapi.goong.io/trip?origin=" + origin_address + "&waypoints=" + dest_address + "&api_key=" + config.API_KEY
+// 	res, err := http.Get(url)
+
+// 	body, err := ioutil.ReadAll(res.Body)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	var data MapType
+// 	json.Unmarshal(body, &data)
+// 	fmt.Println(data)
+// 	return data
+// }
 
 func Main() any {
 	// """Entry point of the program"""

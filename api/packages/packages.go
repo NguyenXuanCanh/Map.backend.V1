@@ -132,7 +132,7 @@ func create_distance_matrix(data Data) any {
 	// 	fmt.Println(response)
 	// 	distance_matrix = append(distance_matrix, build_distance_matrix(response))
 	// }
-	return distance_matrix_duration
+	return place_detail_matrix
 	// return distance_matrix
 }
 
@@ -151,6 +151,7 @@ func send_request(str string) Address {
 	}
 	var data MapType
 	json.Unmarshal([]byte(body), &data)
+	fmt.Println(data)
 	return data.Results[0]
 }
 

@@ -49,6 +49,7 @@ func getTest(writer http.ResponseWriter, request *http.Request) {
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
 		Data: vietmap.Main(),
+		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
 	if err != nil {
