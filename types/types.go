@@ -14,3 +14,15 @@ type Package struct {
 	Products []Product `json:"products"`
 	Location string    `json:"location"`
 }
+
+type Job struct {
+	Id       string
+	Location []float64
+	// Service  []int
+}
+
+type Vehicle struct {
+	Id    string
+	Start []float64
+	End   []float64
+}

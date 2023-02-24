@@ -7,7 +7,7 @@ import (
 
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/product"
-	"github.com/NguyenXuanCanh/go-starter/api/vietmap"
+	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/gorilla/mux"
 
 	"net/http"
@@ -48,7 +48,7 @@ func getTest(writer http.ResponseWriter, request *http.Request) {
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: vietmap.Main(),
+		Data: routing.Main(),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
