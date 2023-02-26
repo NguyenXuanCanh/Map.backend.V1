@@ -1,7 +1,11 @@
 package types
 
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 type Product struct {
-	Id       string  `json:"id"`
+	Id       int     `json:"id"`
 	Name     string  `json:"name"`
 	Weight   int     `json:"weight"`
 	Size     int     `json:"size"`
@@ -10,19 +14,29 @@ type Product struct {
 }
 
 type Package struct {
-	Id       string    `json:"id"`
-	Products []Product `json:"products"`
-	Location string    `json:"location"`
+	Id         int                `json:"id"`
+	Account_id int                `json:"account_id"`
+	Total      int                `json:"total"`
+	Date       primitive.DateTime `bson:"date"`
+	Location   string             `json:"location"`
 }
 
+type Trip struct {
+	Id         int                `json:"id"`
+	Account_id int                `json:"account_id"`
+	Package_id int                `json:"package_id"`
+	Date       primitive.DateTime `bson:"date"`
+}
 type Job struct {
-	Id       string
-	Location []float64
+	Id       int
+	Location Location
 	// Service  []int
 }
 
 type Vehicle struct {
-	Id    string
-	Start []float64
-	End   []float64
+	Id    int
+	Start Location
+	End   Location
 }
+
+type Location []float64

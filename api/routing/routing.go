@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/NguyenXuanCanh/go-starter/config"
+	"github.com/NguyenXuanCanh/go-starter/types"
 )
 
 type Data struct {
@@ -32,7 +33,7 @@ type Feature struct {
 	Type     string
 	Geometry struct {
 		Type        string
-		Coordinates []float64
+		Coordinates types.Location
 	}
 	Properties struct {
 		Layer        string
@@ -53,14 +54,14 @@ type Feature struct {
 		Block        int
 		Floor        int
 	}
-	Bbox []float64
+	Bbox types.Location
 	Id   string
 }
 
 type Address struct {
 	Features []Feature
 	Type     string
-	bbox     []float64
+	bbox     types.Location
 	License  string
 }
 

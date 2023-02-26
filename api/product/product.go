@@ -1,27 +1,42 @@
 package product
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"context"
 	"log"
 	"net/http"
 
+	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/types"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetAll() []types.Product {
-	url := "https://63d3d0f5a93a149755b37951.mockapi.io/api/product"
-	res, err := http.Get(url)
+func GetAll(response http.ResponseWriter, request *http.Request) []types.Product {
+	response.Header().Set("content-type", "application/json")
+	var database = connection.UseDatabase()
+	cur, err := database.Collection("products").Find(context.Background(), bson.D{})
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
-	body, err := ioutil.ReadAll(res.Body)
+	defer cur.Close(context.Background())
+	var products []types.Product
+	for cur.Next(context.Background()) {
+		// To decode into a struct, use cursor.Decode()
+		var prod types.Product
+		err := cur.Decode(&prod)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// do something with result...
 
-	if err != nil {
-		log.Fatalln(err)
+		// To get the bson bytes value use cursor.Current
+		var raw types.Product
+		bsonBytes, _ := bson.Marshal(cur.Current)
+		bson.Unmarshal(bsonBytes, &raw)
+		products = append(products, raw)
 	}
-
-	var data []types.Product
-	json.Unmarshal(body, &data)
-	return data
+	if err := cur.Err(); err != nil {
+		// return "error"
+	}
+	// return json.NewEncoder(response).Encode(products)
+	return products
 }
