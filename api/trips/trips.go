@@ -2,10 +2,12 @@ package trips
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
+	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,13 +44,36 @@ func GetTrips(response http.ResponseWriter, request *http.Request) []types.Trip 
 	return trips
 }
 
-func CreateTrip() any {
+func CreateTrip(response http.ResponseWriter, request *http.Request) any {
+	response.Header().Set("content-type", "application/json")
 	var vehicles []types.Vehicle
 	var vehicle types.Vehicle
 	vehicle.Id = 1
 	vehicle.Start = config.GetDefaultStoreLocation()
 	vehicle.End = config.GetDefaultStoreLocation()
-	vehicles[0] = vehicle
+	vehicles = append(vehicles, vehicle)
 
-	return vehicle
+	//get all waypoints
+	var way_points = routing.Main()
+	//create job for trips
+	//now from packages > create jobs
+	var jobs []types.Job
+	for i := 0; i < len(way_points); i++ {
+		var job types.Job
+		job.Id = i
+		job.Location = way_points[i]
+		jobs = append(jobs, job)
+	}
+
+	var _api_call struct {
+		Vehicles []types.Vehicle
+		Jobs     []types.Job
+	}
+	_api_call.Vehicles = vehicles
+	_api_call.Jobs = jobs
+
+	// var req_url = "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey=" + config.API_KEY + "&jobs=" + _api_call.Jobs + "&vehicles=" + _api_call.Vehicles
+	url := "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey={your-apikey}&{point}&point={point}&point={point}&jobs={jobs}&vehicles={vehicles}"
+	fmt.Println(url)
+	return _api_call
 }

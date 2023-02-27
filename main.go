@@ -7,6 +7,7 @@ import (
 
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/product"
+	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/gorilla/mux"
 
@@ -56,7 +57,21 @@ func getTest(writer http.ResponseWriter, request *http.Request) {
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: trips.CreateTrip(),
+		Data: trips.CreateTrip(writer, request),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func getRouting(writer http.ResponseWriter, request *http.Request) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: routing.Main(),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
@@ -71,6 +86,7 @@ func main() {
 
 	router.HandleFunc("/getAllProduct", getAllProduct).Methods("GET")
 	router.HandleFunc("/getAllPackage", getAllPackage).Methods("GET")
+	router.HandleFunc("/getRouting", getRouting).Methods("GET")
 	router.HandleFunc("/getTest", getTest).Methods("GET")
 	err := http.ListenAndServe("localhost:8080", router)
 

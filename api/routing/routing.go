@@ -20,11 +20,11 @@ func CreateData() Data {
 	var data Data
 	data.Addresses = []string{
 		"159 Hung Phu, phuong 8 quan 8", // depot
-		// "273 An Duong Vuong, phuong 3 quan 5",
-		// "1283 Huynh Tan Phat, quan 7",
-		// "1 Nguyen Bieu Phuong 1 Quan 5 TP HCM",
-		// "50 Lac Long Quan Phuong 3 Quan 11",
-		// "17 Duong Dinh Nghe Phuong 8 Quan 11",
+		"273 An Duong Vuong, phuong 3 quan 5",
+		"1283 Huynh Tan Phat, quan 7",
+		"1 Nguyen Bieu Phuong 1 Quan 5 TP HCM",
+		"50 Lac Long Quan Phuong 3 Quan 11",
+		"17 Duong Dinh Nghe Phuong 8 Quan 11",
 	}
 	return data
 }
@@ -71,15 +71,15 @@ type MapType struct {
 	Data    Address
 }
 
-func create_distance_matrix(data Data) any {
+func create_distance_matrix(data Data) []types.Location {
 	addresses := data.Addresses
 
 	// var distance_matrix_duration []any
 	// var distance_matrix_distance []any
 
-	var place_detail_matrix []any
+	var place_detail_matrix []types.Location
 	for i := 0; i < len(addresses); i++ {
-		var temp any = send_request(addresses[i])
+		var temp types.Location = send_request(addresses[i])
 		place_detail_matrix = append(place_detail_matrix, temp)
 	}
 
@@ -100,11 +100,10 @@ func create_distance_matrix(data Data) any {
 	// return distance_matrix
 }
 
-func send_request(str string) any {
+func send_request(str string) types.Location {
 	stringReq := strings.Replace(str, " ", "%20", -1)
 	url := "https://maps.vietmap.vn/api/search?api-version=1.1&apikey=" + config.API_KEY + "&text=" + stringReq
 	res, err := http.Get(url)
-	fmt.Println(url)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -115,8 +114,13 @@ func send_request(str string) any {
 	}
 	var data MapType
 	json.Unmarshal(body, &data)
-	fmt.Println(data)
-	return data
+	// fmt.Println(data)
+	arrLength := len(data.Data.Features)
+	if arrLength > 0 {
+		return data.Data.Features[0].Geometry.Coordinates
+	} else {
+		return nil
+	}
 }
 
 // func send_request_distance_matrix(origin_address string, dest_address string) any {
@@ -134,7 +138,7 @@ func send_request(str string) any {
 // 	return data
 // }
 
-func Main() any {
+func Main() []types.Location {
 	// """Entry point of the program"""
 	// # Create the data.
 	data := CreateData()
