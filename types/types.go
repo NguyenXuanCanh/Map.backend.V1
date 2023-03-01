@@ -28,15 +28,18 @@ type Trip struct {
 	Date       primitive.DateTime `bson:"date"`
 }
 type Job struct {
-	Id       int
-	Location Location
+	Id          int      `json:"id"`
+	Location    Location `json:"location"`
+	Amount      []int    `json:"amount"`
+	Description string   `json:"description"`
 	// Service  []int
 }
 
 type Vehicle struct {
-	Id    int
-	Start Location
-	End   Location
+	Id       int      `json:"id"`
+	Start    Location `json:"start"`
+	End      Location `json:"end"`
+	Capacity []int    `json:"capacity"`
 }
 
 type Location []float64

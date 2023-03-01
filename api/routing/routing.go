@@ -19,12 +19,12 @@ func CreateData() Data {
 	// """Creates the data."""
 	var data Data
 	data.Addresses = []string{
-		"159 Hung Phu, phuong 8 quan 8", // depot
-		"273 An Duong Vuong, phuong 3 quan 5",
-		"1283 Huynh Tan Phat, quan 7",
+		"159 Hung Phu, phuong 8 quan 8 TP HCM", // depot
+		"273 An Duong Vuong, phuong 3 quan 5 TP HCM",
+		// "1283 Huynh Tan Phat, quan 7",
 		"1 Nguyen Bieu Phuong 1 Quan 5 TP HCM",
-		"50 Lac Long Quan Phuong 3 Quan 11",
-		"17 Duong Dinh Nghe Phuong 8 Quan 11",
+		"50 Lac Long Quan Phuong 3 Quan 11 TP HCM",
+		"17 Duong Dinh Nghe Phuong 8 Quan 11 TP HCM",
 	}
 	return data
 }

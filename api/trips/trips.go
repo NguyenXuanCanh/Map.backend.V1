@@ -1,7 +1,9 @@
 package trips
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +14,12 @@ import (
 	"github.com/NguyenXuanCanh/go-starter/types"
 	"go.mongodb.org/mongo-driver/bson"
 )
+
+type SubmitData struct {
+	Vehicles    []types.Vehicle `json:"vehicles"`
+	Jobs        []types.Job     `json:"jobs"`
+	VehicleType string          `json:"vehicle_type"`
+}
 
 func GetTrips(response http.ResponseWriter, request *http.Request) []types.Trip {
 	response.Header().Set("content-type", "application/json")
@@ -51,6 +59,7 @@ func CreateTrip(response http.ResponseWriter, request *http.Request) any {
 	vehicle.Id = 1
 	vehicle.Start = config.GetDefaultStoreLocation()
 	vehicle.End = config.GetDefaultStoreLocation()
+	vehicle.Capacity = append(vehicle.Capacity, 15)
 	vehicles = append(vehicles, vehicle)
 
 	//get all waypoints
@@ -60,20 +69,47 @@ func CreateTrip(response http.ResponseWriter, request *http.Request) any {
 	var jobs []types.Job
 	for i := 0; i < len(way_points); i++ {
 		var job types.Job
-		job.Id = i
+		job.Id = i + 1
 		job.Location = way_points[i]
+		job.Amount = append(job.Amount, 1)
+		job.Description = ""
 		jobs = append(jobs, job)
 	}
 
-	var _api_call struct {
-		Vehicles []types.Vehicle
-		Jobs     []types.Job
-	}
-	_api_call.Vehicles = vehicles
+	var _api_call SubmitData
 	_api_call.Jobs = jobs
-
+	_api_call.Vehicles = vehicles
 	// var req_url = "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey=" + config.API_KEY + "&jobs=" + _api_call.Jobs + "&vehicles=" + _api_call.Vehicles
-	url := "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey={your-apikey}&{point}&point={point}&point={point}&jobs={jobs}&vehicles={vehicles}"
-	fmt.Println(url)
-	return _api_call
+
+	return CreateTripRoute(_api_call)
+}
+
+func CreateTripRoute(data SubmitData) any {
+	urlReq := "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey=" + config.API_KEY
+	values := map[string]interface{}{
+		"jobs":         data.Jobs,
+		"vehicles":     data.Vehicles,
+		"vehicle_type": "motorcycle",
+	}
+	json_data, err := json.Marshal(values)
+	// fmt.Println("data data: \n", data)
+	// fmt.Printf("json data: %s\n", json_data)
+	if err != nil {
+		fmt.Printf("could not marshal json: %s\n", err)
+		return ""
+	}
+
+	resp, err := http.Post(urlReq, "application/json",
+		bytes.NewBuffer(json_data))
+
+	if err != nil {
+		fmt.Printf("could not marshal json: %s\n", err)
+		return ""
+	}
+
+	var res map[string]interface{}
+
+	json.NewDecoder(resp.Body).Decode(&res)
+	// fmt.Println(res)
+	return res
 }
