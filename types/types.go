@@ -14,11 +14,12 @@ type Product struct {
 }
 
 type Package struct {
-	Id         int                `json:"id"`
-	Account_id int                `json:"account_id"`
-	Total      int                `json:"total"`
-	Date       primitive.DateTime `bson:"date"`
-	Location   string             `json:"location"`
+	Id          int                `json:"id"`
+	Account_id  int                `json:"account_id"`
+	Total       int                `json:"total"`
+	Date        primitive.DateTime `bson:"date"`
+	Location    Location           `json:"location"`
+	Description string             `json:"description"`
 }
 
 type Trip struct {
