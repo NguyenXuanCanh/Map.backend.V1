@@ -52,7 +52,7 @@ func getAllPackage(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getTest(writer http.ResponseWriter, request *http.Request) {
+func getTrip(writer http.ResponseWriter, request *http.Request) {
 	// api.TestGetAPI()
 	response := Response{
 		Status: "OK",
@@ -87,7 +87,7 @@ func main() {
 	router.HandleFunc("/getAllProduct", getAllProduct).Methods("GET")
 	router.HandleFunc("/getAllPackage", getAllPackage).Methods("GET")
 	router.HandleFunc("/getRouting", getRouting).Methods("GET")
-	router.HandleFunc("/getTest", getTest).Methods("GET")
+	router.HandleFunc("/getTrip", getTrip).Methods("GET")
 	err := http.ListenAndServe("localhost:8080", router)
 
 	if err != nil {
