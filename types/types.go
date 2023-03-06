@@ -14,11 +14,12 @@ type Product struct {
 }
 
 type Package struct {
-	Id         int                `json:"id"`
-	Account_id int                `json:"account_id"`
-	Total      int                `json:"total"`
-	Date       primitive.DateTime `bson:"date"`
-	Location   string             `json:"location"`
+	Id          int                `json:"id"`
+	Account_id  int                `json:"account_id"`
+	Total       int                `json:"total"`
+	Date        primitive.DateTime `bson:"date"`
+	Location    Location           `json:"location"`
+	Description string             `json:"description"`
 }
 
 type Trip struct {
@@ -42,4 +43,37 @@ type Vehicle struct {
 	Capacity []int    `json:"capacity"`
 }
 
+type Route struct {
+	Code  string `json:"code"`
+	Paths []Path `json:"path"`
+}
+
+type Path struct {
+	Distance     int           `json:"distance"`
+	Instructions []Instruction `json:"instruction"`
+	Bbox         []float64     `json:"bbox"`
+	Points       string        `json:"points"`
+}
+
+type Instruction struct {
+	Text       string `json:"text"`
+	StreetName string `json:"street_name"`
+	Distance   int    `json:"distance"`
+	Time       int    `json:"time"`
+	Interval   string `json:"interval"`
+	Sign       string `json:"sign"`
+	// guidance rule:
+	// 		TURN_SHARP_LEFT=-3
+	// 		TURN_LEFT=-2
+	// 		TURN_SLIGHT_LEFT=-1
+	// 		CONTINUE_ON_STREET=0
+	// 		TURN_SLIGHT_RIGHT=1
+	// 		TURN_RIGHT=2
+	// 		TURN_SHARP_RIGHT=3
+	// 		FINISH=4
+	// 		VIA_REACHED=5
+	// 		USE_ROUNDABOUT=6
+	// 		KEEP_RIGHT=7
+	// 		UTURN=-98
+}
 type Location []float64

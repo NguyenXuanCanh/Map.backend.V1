@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
-	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -63,25 +62,25 @@ func CreateTrip(response http.ResponseWriter, request *http.Request) any {
 	vehicles = append(vehicles, vehicle)
 
 	//get all waypoints
-	var way_points = routing.Main()
+	var way_points = CreatePackagesTrip(response, request)
 	//create job for trips
 	//now from packages > create jobs
 	var jobs []types.Job
 	for i := 0; i < len(way_points); i++ {
 		var job types.Job
 		job.Id = i + 1
-		job.Location = way_points[i]
+		job.Location = way_points[i].Location
 		job.Amount = append(job.Amount, 1)
-		job.Description = ""
+		job.Description = way_points[i].Description
 		jobs = append(jobs, job)
 	}
 
-	var _api_call SubmitData
-	_api_call.Jobs = jobs
-	_api_call.Vehicles = vehicles
+	var submitData SubmitData
+	submitData.Jobs = jobs
+	submitData.Vehicles = vehicles
 	// var req_url = "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey=" + config.API_KEY + "&jobs=" + _api_call.Jobs + "&vehicles=" + _api_call.Vehicles
 
-	return CreateTripRoute(_api_call)
+	return CreateTripRoute(submitData)
 }
 
 func CreateTripRoute(data SubmitData) any {
@@ -89,7 +88,7 @@ func CreateTripRoute(data SubmitData) any {
 	values := map[string]interface{}{
 		"jobs":         data.Jobs,
 		"vehicles":     data.Vehicles,
-		"vehicle_type": "motorcycle",
+		"vehicle_type": "car",
 	}
 	json_data, err := json.Marshal(values)
 	// fmt.Println("data data: \n", data)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/product"
+	"github.com/NguyenXuanCanh/go-starter/api/route_map"
 	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/gorilla/mux"
@@ -72,6 +73,20 @@ func getRouting(writer http.ResponseWriter, request *http.Request) {
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
 		Data: routing.Main(),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func getRoute(writer http.ResponseWriter, request *http.Request) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: route_map.Main(writer, request),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
