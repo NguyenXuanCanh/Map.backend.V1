@@ -7,6 +7,7 @@ import (
 
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/product"
+	"github.com/NguyenXuanCanh/go-starter/api/route_map"
 	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/gorilla/mux"
@@ -80,14 +81,28 @@ func getRouting(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func getRoute(writer http.ResponseWriter, request *http.Request) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: route_map.Main(writer, request),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func main() {
 	router := mux.NewRouter()
 	fmt.Println("STARTED")
 
 	router.HandleFunc("/getAllProduct", getAllProduct).Methods("GET")
 	router.HandleFunc("/getAllPackage", getAllPackage).Methods("GET")
-	router.HandleFunc("/getRouting", getRouting).Methods("GET")
-	router.HandleFunc("/getTest", getTest).Methods("GET")
+	// router.HandleFunc("/getRouting", getRouting).Methods("GET")
+	router.HandleFunc("/vrp", getTest).Methods("GET")
 	err := http.ListenAndServe("localhost:8080", router)
 
 	if err != nil {
