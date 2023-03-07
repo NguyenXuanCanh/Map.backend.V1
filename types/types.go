@@ -51,6 +51,12 @@ type VehicleDB struct {
 	Weight      int    `json:"weight"`
 }
 
+type History struct {
+	Id         int                `json:"id"`
+	Package_id int                `json:"package_id"`
+	Done_date  primitive.DateTime `json:"done_date"`
+}
+
 type Route struct {
 	Code  string `json:"code"`
 	Paths []Path `json:"path"`
@@ -70,18 +76,5 @@ type Instruction struct {
 	Time       int    `json:"time"`
 	Interval   string `json:"interval"`
 	Sign       string `json:"sign"`
-	// guidance rule:
-	// 		TURN_SHARP_LEFT=-3
-	// 		TURN_LEFT=-2
-	// 		TURN_SLIGHT_LEFT=-1
-	// 		CONTINUE_ON_STREET=0
-	// 		TURN_SLIGHT_RIGHT=1
-	// 		TURN_RIGHT=2
-	// 		TURN_SHARP_RIGHT=3
-	// 		FINISH=4
-	// 		VIA_REACHED=5
-	// 		USE_ROUNDABOUT=6
-	// 		KEEP_RIGHT=7
-	// 		UTURN=-98
 }
 type Location []float64
