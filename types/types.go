@@ -43,6 +43,14 @@ type Vehicle struct {
 	Capacity []int    `json:"capacity"`
 }
 
+type VehicleDB struct {
+	Id          int    `json:"id"`
+	License     string `json:"license"`
+	Owner_name  string `json:"Owner_name"`
+	Tank_volume int    `json:"tank_volume"`
+	Weight      int    `json:"weight"`
+}
+
 type Route struct {
 	Code  string `json:"code"`
 	Paths []Path `json:"path"`

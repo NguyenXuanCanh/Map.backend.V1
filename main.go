@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/product"
 	"github.com/NguyenXuanCanh/go-starter/api/route_map"
 	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
+	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
 	"github.com/gorilla/mux"
 
 	"net/http"
@@ -41,11 +41,24 @@ func getAllProduct(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getAllPackage(writer http.ResponseWriter, request *http.Request) {
+func getVehicle(writer http.ResponseWriter, request *http.Request) {
 	// api.TestGetAPI()
 	response := Response{
 		Status: "OK",
-		Data:   packages.GetAll(writer, request),
+		// Data:   packages.GetAll(writer, request),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func AddVehicle(writer http.ResponseWriter, request *http.Request) {
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: vehicles.AddVehicle(writer, request),
+		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
 	if err != nil {
@@ -100,9 +113,12 @@ func main() {
 	fmt.Println("STARTED")
 
 	router.HandleFunc("/getAllProduct", getAllProduct).Methods("GET")
-	router.HandleFunc("/getAllPackage", getAllPackage).Methods("GET")
-	router.HandleFunc("/getRouting", getRouting).Methods("GET")
+	// router.HandleFunc("/getAllPackage", getAllPackage).Methods("GET")
+	// router.HandleFunc("/getRouting", getRouting).Methods("GET")
+	router.HandleFunc("/getVehicle", getVehicle).Methods("GET")
+	router.HandleFunc("/addVehicle", AddVehicle).Methods("GET")
 	router.HandleFunc("/getTrip", getTrip).Methods("GET")
+
 	err := http.ListenAndServe("localhost:8080", router)
 
 	if err != nil {
