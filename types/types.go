@@ -54,9 +54,10 @@ type VehicleDB struct {
 }
 
 type History struct {
-	Id         int                `json:"id"`
+	Id         int                `json:"_id"`
+	Account_id int                `json:"account_id"`
 	Package_id int                `json:"package_id"`
-	Done_date  primitive.DateTime `json:"done_date"`
+	Date       primitive.DateTime `json:"date"`
 }
 
 type Route struct {
