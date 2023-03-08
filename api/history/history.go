@@ -57,7 +57,42 @@ func GetHistoryById(id string) types.History {
 	return history
 }
 
-func Addhistory(response http.ResponseWriter, request *http.Request) any {
+func GetHistoryByAccountId(id string) []types.History {
+	id_account, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println(err)
+	}
+	filter := bson.D{{"id_account", id_account}}
+	var database = connection.UseDatabase()
+	cur, err := database.Collection("history").Find(context.Background(), filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cur.Close(context.Background())
+	var histories []types.History
+	for cur.Next(context.Background()) {
+		// To decode into a struct, use cursor.Decode()
+		var prod types.History
+		err := cur.Decode(&prod)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// do something with result...
+
+		// To get the bson bytes value use cursor.Current
+		var raw types.History
+		bsonBytes, _ := bson.Marshal(cur.Current)
+		bson.Unmarshal(bsonBytes, &raw)
+		histories = append(histories, raw)
+	}
+	if err := cur.Err(); err != nil {
+		// return "error"
+	}
+	// return json.NewEncoder(response).Encode(histories)
+	return histories
+}
+
+func AddHistory(response http.ResponseWriter, request *http.Request) any {
 	response.Header().Set("content-type", "application/json")
 	var database = connection.UseDatabase()
 

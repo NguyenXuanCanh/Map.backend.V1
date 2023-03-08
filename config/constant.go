@@ -9,7 +9,7 @@ const API_ROUTE_KEY = "rvWoa97j8PhzM5VUA0cr1IGNNNm5X81HoIN8GET6"
 
 func GetDefaultStoreLocation() types.Location {
 	var store types.Location
-	store = append(store, 106.112456)
-	store = append(store, 10.684922)
+	store = append(store, 106.682175)
+	store = append(store, 10.758818)
 	return store
 }

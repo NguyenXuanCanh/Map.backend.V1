@@ -18,6 +18,7 @@ type Package struct {
 	Account_id  int                `json:"account_id"`
 	Total       int                `json:"total"`
 	Date        primitive.DateTime `bson:"date"`
+	Status      string             `json:"status"`
 	Location    Location           `json:"location"`
 	Description string             `json:"description"`
 }
@@ -44,11 +45,12 @@ type Vehicle struct {
 }
 
 type VehicleDB struct {
-	Id          int    `json:"id"`
+	Id          string `json:"_id"`
+	Brand       string `json:"brand"`
 	License     string `json:"license"`
-	Owner_name  string `json:"Owner_name"`
+	Owner_name  string `json:"owner_name"`
 	Tank_volume int    `json:"tank_volume"`
-	Weight      int    `json:"weight"`
+	Tank_weight int    `json:"tank_weight"`
 }
 
 type History struct {

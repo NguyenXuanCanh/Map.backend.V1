@@ -11,8 +11,13 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
+	github.com/kr/fs v0.1.0 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
+	github.com/kr/text v0.1.0 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/tools/godep v0.0.0-20180126220526-ce0bfadeb516 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
@@ -22,6 +27,7 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
 

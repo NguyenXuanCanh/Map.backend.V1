@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
-	"strconv"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/types"
@@ -42,14 +40,14 @@ func GetAll() []types.VehicleDB {
 	return vehicles
 }
 
-func GetVehicleById(id string) types.VehicleDB {
-	id_int, err := strconv.Atoi(id)
-	if err != nil {
-		fmt.Println(err)
-	}
+func GetVehicleByAccountId(id string) types.VehicleDB {
+	// id_int, err := strconv.Atoi(id)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 	var database = connection.UseDatabase()
 	var vehicle types.VehicleDB
-	filter := bson.D{{"id", id_int}}
+	filter := bson.D{{"account_id", id}}
 	err_db := database.Collection("vehicles").FindOne(context.TODO(), filter).Decode(&vehicle)
 	if err_db != nil {
 		fmt.Println(err_db)
@@ -57,16 +55,15 @@ func GetVehicleById(id string) types.VehicleDB {
 	return vehicle
 }
 
-func AddVehicle(response http.ResponseWriter, request *http.Request) any {
-	response.Header().Set("content-type", "application/json")
+func AddVehicle() any {
 	var database = connection.UseDatabase()
 
 	newVehicle := types.VehicleDB{
-		Id:          1,
+		Brand:       "Honda",
 		License:     "35281",
 		Owner_name:  "Name",
 		Tank_volume: 2600,
-		Weight:      2600,
+		Tank_weight: 2600,
 	}
 
 	result, err := database.Collection("vehicles").InsertOne(context.Background(), newVehicle)

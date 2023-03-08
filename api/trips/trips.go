@@ -62,7 +62,7 @@ func CreateTrip(response http.ResponseWriter, request *http.Request) any {
 	vehicles = append(vehicles, vehicle)
 
 	//get all waypoints
-	var way_points = CreatePackagesTrip(response, request)
+	var way_points = CreatePackageWayPoint()
 	//create job for trips
 	//now from packages > create jobs
 	var jobs []types.Job

@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/NguyenXuanCanh/go-starter/api/product"
-	"github.com/NguyenXuanCanh/go-starter/api/route_map"
-	"github.com/NguyenXuanCanh/go-starter/api/routing"
+	// "github.com/NguyenXuanCanh/go-starter/api/product"
+	// "github.com/NguyenXuanCanh/go-starter/api/route_map"
+	// "github.com/NguyenXuanCanh/go-starter/api/routing"
+	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
 
 	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -30,25 +30,25 @@ type Product struct {
 	Quantity int     `json:"quantity"`
 }
 
-func getAllProduct(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-	response := Response{
-		Status: "OK",
-		Data:   product.GetAll(writer, request),
-	}
-	err := json.NewEncoder(writer).Encode(response)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+// func getAllProduct(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+// 	response := Response{
+// 		Status: "OK",
+// 		Data:   product.GetAll(writer, request),
+// 	}
+// 	err := json.NewEncoder(writer).Encode(response)
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+// }
 
-func getVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+func GetVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	// api.TestGetAPI()
 	var id = ps.ByName("id")
 	var data any
 	if id == "" {
 		data = vehicles.GetAll()
 	} else {
-		data = vehicles.GetVehicleById(id)
+		data = vehicles.GetVehicleByAccountId(id)
 	}
 	response := Response{
 		Status: "OK",
@@ -64,7 +64,7 @@ func AddVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: vehicles.AddVehicle(writer, request),
+		Data: vehicles.AddVehicle(),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
@@ -73,7 +73,22 @@ func AddVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter
 	}
 }
 
-func getTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+func UpdatePackage(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	var id = ps.ByName("id")
+	var status = ps.ByName("status")
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: packages.UpdatePackageStatus(id, status),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func GetTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	// api.TestGetAPI()
 	response := Response{
 		Status: "OK",
@@ -87,33 +102,33 @@ func getTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Pa
 	}
 }
 
-func getRouting(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-	// api.TestGetAPI()
-	response := Response{
-		Status: "OK",
-		// Data:   compute_routes.GetComputeRoutes(),
-		Data: routing.Main(),
-		// Data: packages.Main(),
-	}
-	err := json.NewEncoder(writer).Encode(response)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+// func getRouting(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+// 	// api.TestGetAPI()
+// 	response := Response{
+// 		Status: "OK",
+// 		// Data:   compute_routes.GetComputeRoutes(),
+// 		Data: routing.Main(),
+// 		// Data: packages.Main(),
+// 	}
+// 	err := json.NewEncoder(writer).Encode(response)
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+// }
 
-func getRoute(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-	// api.TestGetAPI()
-	response := Response{
-		Status: "OK",
-		// Data:   compute_routes.GetComputeRoutes(),
-		Data: route_map.Main(writer, request),
-		// Data: packages.Main(),
-	}
-	err := json.NewEncoder(writer).Encode(response)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+// func getRoute(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+// 	// api.TestGetAPI()
+// 	response := Response{
+// 		Status: "OK",
+// 		// Data:   compute_routes.GetComputeRoutes(),
+// 		Data: route_map.Main(writer, request),
+// 		// Data: packages.Main(),
+// 	}
+// 	err := json.NewEncoder(writer).Encode(response)
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+// }
 
 func main() {
 	// router := mux.NewRouter()
@@ -122,12 +137,12 @@ func main() {
 	fmt.Println("STARTED")
 
 	// router.GET("/getAllProduct", getAllProduct)
-	// router.GET("/getAllPackage", getAllPackage)
+	router.GET("/package_update/:id/:status", UpdatePackage)
 	// router.GET("/getRouting", getRouting)
-	router.GET("/vehicle", getVehicle)
-	router.GET("/vehicle/:id", getVehicle)
+	router.GET("/vehicle", GetVehicle)
+	router.GET("/vehicle/:id", GetVehicle)
 	router.GET("/vehicle_add", AddVehicle)
-	router.GET("/trip", getTrip)
+	router.GET("/trip", GetTrip)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	// err := http.ListenAndServe("localhost:8080", router)

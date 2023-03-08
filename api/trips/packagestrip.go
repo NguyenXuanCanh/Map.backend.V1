@@ -110,8 +110,8 @@ func CreateLocation(str string) types.Location {
 	}
 }
 
-func CreatePackagesTrip(writer http.ResponseWriter, request *http.Request) []types.Package {
-	data := packages.GetAll(writer, request)
+func CreatePackageWayPoint() []types.Package {
+	data := packages.GetPackageWaiting()
 	for i := 0; i < len(data); i++ {
 		location := CreateLocation(data[i].Description)
 		data[i].Location = location
