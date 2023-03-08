@@ -2,9 +2,7 @@ package packages
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/types"
@@ -72,12 +70,8 @@ func GetPackageWaiting() []types.Package {
 	return packages
 }
 
-func UpdatePackageStatus(id string, status string) any {
-	id_int, err := strconv.Atoi(id)
-	if err != nil {
-		fmt.Println(err)
-	}
-	filter := bson.D{{"id", id_int}}
+func UpdatePackageStatus(id int, status string) any {
+	filter := bson.D{{"id", id}}
 	update := bson.D{{"$set", bson.D{{"status", status}}}}
 
 	var database = connection.UseDatabase()

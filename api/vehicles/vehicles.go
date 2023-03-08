@@ -2,8 +2,10 @@ package vehicles
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/types"
@@ -55,18 +57,16 @@ func GetVehicleByAccountId(id string) types.VehicleDB {
 	return vehicle
 }
 
-func AddVehicle() any {
+func AddVehicle(request *http.Request) any {
+	decoder := json.NewDecoder(request.Body)
+	var vehicle_add types.History
+	errDecode := decoder.Decode(&vehicle_add)
+	if errDecode != nil {
+		panic(errDecode)
+	}
 	var database = connection.UseDatabase()
 
-	newVehicle := types.VehicleDB{
-		Brand:       "Honda",
-		License:     "35281",
-		Owner_name:  "Name",
-		Tank_volume: 2600,
-		Tank_weight: 2600,
-	}
-
-	result, err := database.Collection("vehicles").InsertOne(context.Background(), newVehicle)
+	result, err := database.Collection("vehicles").InsertOne(context.Background(), vehicle_add)
 	if err != nil {
 		log.Fatal(err)
 	}

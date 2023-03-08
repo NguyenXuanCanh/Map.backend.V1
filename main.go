@@ -8,7 +8,7 @@ import (
 	// "github.com/NguyenXuanCanh/go-starter/api/product"
 	// "github.com/NguyenXuanCanh/go-starter/api/route_map"
 	// "github.com/NguyenXuanCanh/go-starter/api/routing"
-	"github.com/NguyenXuanCanh/go-starter/api/packages"
+	"github.com/NguyenXuanCanh/go-starter/api/history"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
 
@@ -64,7 +64,7 @@ func AddVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: vehicles.AddVehicle(),
+		Data: vehicles.AddVehicle(request),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
@@ -73,20 +73,20 @@ func AddVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter
 	}
 }
 
-func UpdatePackage(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-	var id = ps.ByName("id")
-	var status = ps.ByName("status")
-	response := Response{
-		Status: "OK",
-		// Data:   compute_routes.GetComputeRoutes(),
-		Data: packages.UpdatePackageStatus(id, status),
-		// Data: packages.Main(),
-	}
-	err := json.NewEncoder(writer).Encode(response)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+// func UpdatePackage(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+// 	var id = ps.ByName("id")
+// 	var status = ps.ByName("status")
+// 	response := Response{
+// 		Status: "OK",
+// 		// Data:   compute_routes.GetComputeRoutes(),
+// 		Data: packages.UpdatePackageStatus(id, status),
+// 		// Data: packages.Main(),
+// 	}
+// 	err := json.NewEncoder(writer).Encode(response)
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+// }
 
 func GetTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	// api.TestGetAPI()
@@ -102,33 +102,32 @@ func GetTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Pa
 	}
 }
 
-// func getRouting(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-// 	// api.TestGetAPI()
-// 	response := Response{
-// 		Status: "OK",
-// 		// Data:   compute_routes.GetComputeRoutes(),
-// 		Data: routing.Main(),
-// 		// Data: packages.Main(),
-// 	}
-// 	err := json.NewEncoder(writer).Encode(response)
-// 	if err != nil {
-// 		log.Fatalln(err)
-// 	}
-// }
+func GetHistoryByAccountId(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	var id = ps.ByName("id")
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: history.GetHistoryByAccountId(id),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
 
-// func getRoute(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-// 	// api.TestGetAPI()
-// 	response := Response{
-// 		Status: "OK",
-// 		// Data:   compute_routes.GetComputeRoutes(),
-// 		Data: route_map.Main(writer, request),
-// 		// Data: packages.Main(),
-// 	}
-// 	err := json.NewEncoder(writer).Encode(response)
-// 	if err != nil {
-// 		log.Fatalln(err)
-// 	}
-// }
+func AddHistory(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: history.AddHistory(request),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
 
 func main() {
 	// router := mux.NewRouter()
@@ -137,11 +136,13 @@ func main() {
 	fmt.Println("STARTED")
 
 	// router.GET("/getAllProduct", getAllProduct)
-	router.GET("/package_update/:id/:status", UpdatePackage)
+	// router.GET("/package_update/:id/:status", UpdatePackage)
 	// router.GET("/getRouting", getRouting)
 	router.GET("/vehicle", GetVehicle)
 	router.GET("/vehicle/:id", GetVehicle)
-	router.GET("/vehicle_add", AddVehicle)
+	router.POST("/vehicle_add", AddVehicle)
+	router.POST("/history_add", AddHistory)
+	router.GET("/history/:id", GetHistoryByAccountId)
 	router.GET("/trip", GetTrip)
 
 	log.Fatal(http.ListenAndServe(":8080", router))

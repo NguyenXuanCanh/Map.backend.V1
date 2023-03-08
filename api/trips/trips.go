@@ -68,7 +68,7 @@ func CreateTrip(response http.ResponseWriter, request *http.Request) any {
 	var jobs []types.Job
 	for i := 0; i < len(way_points); i++ {
 		var job types.Job
-		job.Id = i + 1
+		job.Id = way_points[i].Id
 		job.Location = way_points[i].Location
 		job.Amount = append(job.Amount, 1)
 		job.Description = way_points[i].Description

@@ -14,13 +14,15 @@ type Product struct {
 }
 
 type Package struct {
-	Id          int                `json:"id"`
-	Account_id  int                `json:"account_id"`
+	Id int `json:"id"`
+	// Account_id  int                `json:"account_id"`
 	Total       int                `json:"total"`
 	Date        primitive.DateTime `bson:"date"`
 	Status      string             `json:"status"`
 	Location    Location           `json:"location"`
 	Description string             `json:"description"`
+	Volume      int                `json:"volume"`
+	Weight      int                `json:"weight"`
 }
 
 type Trip struct {
@@ -55,9 +57,21 @@ type VehicleDB struct {
 
 type History struct {
 	Id         int                `json:"_id"`
-	Account_id int                `json:"account_id"`
+	Account_id string             `json:"account_id"`
 	Package_id int                `json:"package_id"`
 	Date       primitive.DateTime `json:"date"`
+}
+
+type HistoryRes struct {
+	Id          int                `json:"_id"`
+	Account_id  string             `json:"account_id"`
+	Package_id  int                `json:"package_id"`
+	Date        primitive.DateTime `json:"date"`
+	Status      string             `json:"status"`
+	Total       int                `json:"total"`
+	Description string             `json:"description"`
+	Volume      int                `json:"volume"`
+	Weight      int                `json:"weight"`
 }
 
 type Route struct {

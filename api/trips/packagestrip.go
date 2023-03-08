@@ -58,35 +58,6 @@ type MapType struct {
 	Data    Address
 }
 
-// func CreateData() Data {
-// 	// """Creates the data."""
-// 	var data Data
-// 	data.Addresses = []string{
-// 		"159 Hung Phu, phuong 8 quan 8 TP HCM", // depot
-// 		"273 An Duong Vuong, phuong 3 quan 5 TP HCM",
-// 		"400 Nguyen Thi Thap, Phuong Tan Quy, quan 7",
-// 		"1 Nguyen Bieu Phuong 1 Quan 5 TP HCM",
-// 		"50 Lac Long Quan Phuong 3 Quan 11 TP HCM",
-// 		"17 Duong Dinh Nghe Phuong 8 Quan 11 TP HCM",
-// 	}
-// 	return data
-// }
-
-// func CreateLocations(data types.Package) []types.Location {
-// 	addresses := data.Description
-
-// 	// var distance_matrix_duration []any
-// 	// var distance_matrix_distance []any
-
-// 	var location []types.Location
-// 	for i := 0; i < len(addresses); i++ {
-// 		var temp types.Location = send_request(addresses[i])
-// 		location = append(location, temp)
-// 	}
-
-// 	return location
-// }
-
 func CreateLocation(str string) types.Location {
 	stringReq := strings.Replace(str, " ", "%20", -1)
 	url := "https://maps.vietmap.vn/api/search?api-version=1.1&apikey=" + config.API_KEY + "&text=" + stringReq
