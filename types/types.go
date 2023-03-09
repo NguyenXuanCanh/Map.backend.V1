@@ -94,4 +94,10 @@ type Instruction struct {
 	Interval   string `json:"interval"`
 	Sign       string `json:"sign"`
 }
+
+type ProfileImage struct {
+	Account_id string           `json:"account_id"`
+	Image      primitive.Binary `json:"image"`
+}
+
 type Location []float64

@@ -9,6 +9,7 @@ import (
 	// "github.com/NguyenXuanCanh/go-starter/api/route_map"
 	// "github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/history"
+	"github.com/NguyenXuanCanh/go-starter/api/profile"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
 
@@ -129,6 +130,19 @@ func AddHistory(writer http.ResponseWriter, request *http.Request, ps httprouter
 	}
 }
 
+func UpdateImageProfile(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: profile.UpdateImageProfile(request),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func main() {
 	// router := mux.NewRouter()
 	router := httprouter.New()
@@ -142,6 +156,7 @@ func main() {
 	router.GET("/vehicle/:id", GetVehicle)
 	router.POST("/vehicle_add", AddVehicle)
 	router.POST("/history_add", AddHistory)
+	router.POST("/user_image_update", UpdateImageProfile)
 	router.GET("/history/:id", GetHistoryByAccountId)
 	router.GET("/trip", GetTrip)
 
