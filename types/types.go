@@ -31,6 +31,12 @@ type Trip struct {
 	Package_id int                `json:"package_id"`
 	Date       primitive.DateTime `bson:"date"`
 }
+
+type TripAdd struct {
+	Id   int    `json:"id"`
+	Data string `json:"data"`
+}
+
 type Job struct {
 	Id          int      `json:"id"`
 	Location    Location `json:"location"`
@@ -47,7 +53,8 @@ type Vehicle struct {
 }
 
 type VehicleDB struct {
-	Id          string `json:"_id"`
+	Id primitive.ObjectID `bson:"_id,omitempty"`
+
 	Brand       string `json:"brand"`
 	License     string `json:"license"`
 	Owner_name  string `json:"owner_name"`
@@ -74,30 +81,84 @@ type HistoryRes struct {
 	Weight      int                `json:"weight"`
 }
 
-type Route struct {
-	Code  string `json:"code"`
-	Paths []Path `json:"path"`
-}
+// type Route struct {
+// 	Code  string `json:"code"`
+// 	Paths []Path `json:"path"`
+// }
 
-type Path struct {
-	Distance     int           `json:"distance"`
-	Instructions []Instruction `json:"instruction"`
-	Bbox         []float64     `json:"bbox"`
-	Points       string        `json:"points"`
-}
+// type Path struct {
+// 	Distance     int           `json:"distance"`
+// 	Instructions []Instruction `json:"instruction"`
+// 	Bbox         []float64     `json:"bbox"`
+// 	Points       string        `json:"points"`
+// }
 
-type Instruction struct {
-	Text       string `json:"text"`
-	StreetName string `json:"street_name"`
-	Distance   int    `json:"distance"`
-	Time       int    `json:"time"`
-	Interval   string `json:"interval"`
-	Sign       string `json:"sign"`
-}
+// type Instruction struct {
+// 	Text       string `json:"text"`
+// 	StreetName string `json:"street_name"`
+// 	Distance   int    `json:"distance"`
+// 	Time       int    `json:"time"`
+// 	Interval   string `json:"interval"`
+// 	Sign       string `json:"sign"`
+// }
 
 type ProfileImage struct {
 	Account_id string           `json:"account_id"`
 	Image      primitive.Binary `json:"image"`
+}
+
+type TripRes struct {
+	Id         primitive.ObjectID `bson:"_id,omitempty"`
+	Account_id string             `json:"account_id"`
+	Trip_data  TripDB             `json:"trip_data"`
+}
+
+type TripDB struct {
+	Code   int `json:"code"`
+	Sumary struct {
+		Cost            int   `json:"cost"`
+		Unassigned      int   `json:"unassigned"`
+		Delivery        []int `json:"delivery"`
+		Amount          []int `json:"amount"`
+		Pickup          []int `json:"pickup"`
+		Service         int   `json:"service"`
+		Duration        int   `json:"duration"`
+		Waiting_time    int   `json:"waiting_time"`
+		Priority        int   `json:"priority"`
+		Distance        int   `json:"distance"`
+		Computing_times struct {
+			Loading int `json:"loading"`
+			Solving int `json:"solving"`
+			Routing int `json:"routing"`
+		}
+	} `json:"computing_times"`
+	Unassigned []any `json:"unassigned"`
+	Routes     []struct {
+		Vehicle      int   `json:"vehicle"`
+		Cost         int   `json:"cost"`
+		Delivery     []int `json:"delivery"`
+		Amount       []int `json:"amount"`
+		Pickup       []int `json:"pickup"`
+		Service      int   `json:"service"`
+		Duration     int   `json:"duration"`
+		Waiting_time int   `json:"waiting_time"`
+		Priority     int   `json:"priority"`
+		Distance     int   `json:"distance"`
+		Steps        []struct {
+			Type         string   `json:"type"`
+			Description  string   `json:"description"`
+			Location     Location `json:"location"`
+			Id           int      `json:"id"`
+			Service      int      `json:"service"`
+			Waiting_time int      `json:"waiting_time"`
+			Job          int      `json:"job"`
+			Load         []int    `json:"load"`
+			Arrival      int      `json:"arrival"`
+			Duration     int      `json:"duration"`
+			Distance     int      `json:"distance"`
+		} `json:"steps"`
+		Geometry string `json:"geometry"`
+	} `json:"routes"`
 }
 
 type Location []float64

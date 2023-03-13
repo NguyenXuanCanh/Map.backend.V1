@@ -20,38 +20,21 @@ type SubmitData struct {
 	VehicleType string          `json:"vehicle_type"`
 }
 
-func GetTrips(response http.ResponseWriter, request *http.Request) []types.Trip {
-	response.Header().Set("content-type", "application/json")
+func GetTrips(id string) types.TripDB {
 	var database = connection.UseDatabase()
-	cur, err := database.Collection("trips").Find(context.Background(), bson.D{})
+
+	var tripRes types.TripRes
+	filter := bson.D{{"account_id", id}}
+	err := database.Collection("trips").FindOne(context.TODO(), filter).Decode(&tripRes)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer cur.Close(context.Background())
-	var trips []types.Trip
-	for cur.Next(context.Background()) {
-		// To decode into a struct, use cursor.Decode()
-		var prod types.Trip
-		err := cur.Decode(&prod)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// do something with result...
-
-		// To get the bson bytes value use cursor.Current
-		var raw types.Trip
-		bsonBytes, _ := bson.Marshal(cur.Current)
-		bson.Unmarshal(bsonBytes, &raw)
-		trips = append(trips, raw)
-	}
-	if err := cur.Err(); err != nil {
-		// return "error"
-	}
+	fmt.Println(tripRes)
 	// return json.NewEncoder(response).Encode(trips)
-	return trips
+	return tripRes.Trip_data
 }
 
-func CreateTrip(response http.ResponseWriter, request *http.Request) any {
+func CreateTrip(response http.ResponseWriter, request *http.Request, id string) any {
 	response.Header().Set("content-type", "application/json")
 	var vehicles []types.Vehicle
 	var vehicle types.Vehicle
@@ -80,7 +63,28 @@ func CreateTrip(response http.ResponseWriter, request *http.Request) any {
 	submitData.Vehicles = vehicles
 	// var req_url = "https://maps.vietmap.vn/api/vrp?api-version=1.1&apikey=" + config.API_KEY + "&jobs=" + _api_call.Jobs + "&vehicles=" + _api_call.Vehicles
 
-	return CreateTripRoute(submitData)
+	var res = CreateTripRoute(submitData)
+	// fmt.Println(res)
+	return Save(res, id)
+}
+
+func Save(res any, id string) any {
+	var database = connection.UseDatabase()
+	var trip_add struct {
+		Account_id string
+		Trip_data  any
+	}
+	trip_add.Account_id = id
+	trip_add.Trip_data = res
+	// packages.UpdatePackageStatus(trip_add.Id, "success")
+
+	result, err := database.Collection("trips").InsertOne(context.Background(), trip_add)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// return json.NewEncoder(response).Encode(vehicles)
+	return result
 }
 
 func CreateTripRoute(data SubmitData) any {
@@ -107,8 +111,8 @@ func CreateTripRoute(data SubmitData) any {
 	}
 
 	var res map[string]interface{}
-
 	json.NewDecoder(resp.Body).Decode(&res)
 	// fmt.Println(res)
+	// return res
 	return res
 }

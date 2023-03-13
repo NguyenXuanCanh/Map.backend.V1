@@ -8,6 +8,7 @@ import (
 	// "github.com/NguyenXuanCanh/go-starter/api/product"
 	// "github.com/NguyenXuanCanh/go-starter/api/route_map"
 	// "github.com/NguyenXuanCanh/go-starter/api/routing"
+	"github.com/NguyenXuanCanh/go-starter/api/clockin"
 	"github.com/NguyenXuanCanh/go-starter/api/history"
 	"github.com/NguyenXuanCanh/go-starter/api/profile"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
@@ -89,12 +90,59 @@ func AddVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter
 // 	}
 // }
 
-func GetTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+func GenTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	// api.TestGetAPI()
+	var id = ps.ByName("id")
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: trips.CreateTrip(writer, request),
+		Data: trips.CreateTrip(writer, request, id),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func GetTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	// api.TestGetAPI()
+	var id = ps.ByName("id")
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: trips.GetTrips(id),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func GetClockinStatus(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	// api.TestGetAPI()
+	var id = ps.ByName("id")
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: clockin.GetClockinStatus(id),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func UpdateClockinStatus(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	var id = ps.ByName("id")
+	var status = ps.ByName("status")
+
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: clockin.UpdateClockinStatus(id, status),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
@@ -158,7 +206,10 @@ func main() {
 	router.POST("/history_add", AddHistory)
 	router.POST("/user_image_update", UpdateImageProfile)
 	router.GET("/history/:id", GetHistoryByAccountId)
-	router.GET("/trip", GetTrip)
+	router.GET("/trip/:id", GetTrip)
+	router.GET("/generate_trip/:id", GenTrip)
+	router.GET("/clockin_status/:id", GetClockinStatus)
+	router.GET("/update_clockin_status/:id/:status", UpdateClockinStatus)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	// err := http.ListenAndServe("localhost:8080", router)
