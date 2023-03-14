@@ -46,7 +46,7 @@ func GetNotificationByAccountId(id string) []types.Notification {
 		notifications = append(notifications, raw)
 	}
 	if err := cur.Err(); err != nil {
-		// return "error"
+		return notifications
 	}
 	// return json.NewEncoder(response).Encode(notifications)
 	return notifications

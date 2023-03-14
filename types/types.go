@@ -164,7 +164,6 @@ type TripDB struct {
 type Notification struct {
 	Account_id string             `json:"account_id"`
 	Package_id string             `json:"package_id"`
-	Content    string             `json:"content"`
 	Type       string             `json:"type"`
 	Time       primitive.DateTime `json:"time"`
 }
