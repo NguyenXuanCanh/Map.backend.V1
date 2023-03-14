@@ -161,4 +161,17 @@ type TripDB struct {
 	} `json:"routes"`
 }
 
+type Notification struct {
+	Account_id string             `json:"account_id"`
+	Package_id string             `json:"package_id"`
+	Content    string             `json:"content"`
+	Type       string             `json:"type"`
+	Time       primitive.DateTime `json:"time"`
+}
+
+type ClockinStatus struct {
+	Status     string `json:"status"`
+	Account_id string `json:"account_id"`
+}
+
 type Location []float64

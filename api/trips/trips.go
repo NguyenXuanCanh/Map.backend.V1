@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
+	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -56,6 +57,7 @@ func CreateTrip(response http.ResponseWriter, request *http.Request, id string) 
 		job.Amount = append(job.Amount, 1)
 		job.Description = way_points[i].Description
 		jobs = append(jobs, job)
+		packages.UpdatePackageStatus(job.Id, "delivering")
 	}
 
 	var submitData SubmitData

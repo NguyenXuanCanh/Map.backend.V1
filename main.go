@@ -10,6 +10,7 @@ import (
 	// "github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/clockin"
 	"github.com/NguyenXuanCanh/go-starter/api/history"
+	"github.com/NguyenXuanCanh/go-starter/api/notification"
 	"github.com/NguyenXuanCanh/go-starter/api/profile"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
@@ -178,6 +179,33 @@ func AddHistory(writer http.ResponseWriter, request *http.Request, ps httprouter
 	}
 }
 
+func GetNotificationByAccountId(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	var id = ps.ByName("id")
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: notification.GetNotificationByAccountId(id),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func AddNotification(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: notification.AddNotification(request),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func UpdateImageProfile(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	response := Response{
 		Status: "OK",
@@ -197,9 +225,6 @@ func main() {
 
 	fmt.Println("STARTED")
 
-	// router.GET("/getAllProduct", getAllProduct)
-	// router.GET("/package_update/:id/:status", UpdatePackage)
-	// router.GET("/getRouting", getRouting)
 	router.GET("/vehicle", GetVehicle)
 	router.GET("/vehicle/:id", GetVehicle)
 	router.POST("/vehicle_add", AddVehicle)
@@ -209,7 +234,9 @@ func main() {
 	router.GET("/trip/:id", GetTrip)
 	router.GET("/generate_trip/:id", GenTrip)
 	router.GET("/clockin_status/:id", GetClockinStatus)
-	router.GET("/update_clockin_status/:id/:status", UpdateClockinStatus)
+	router.GET("/clockin_status_update/:id/:status", UpdateClockinStatus)
+	router.GET("/notification/:id", GetNotificationByAccountId)
+	router.POST("/notification_add", AddNotification)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	// err := http.ListenAndServe("localhost:8080", router)

@@ -5,36 +5,35 @@ import (
 	"log"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
+	"github.com/NguyenXuanCanh/go-starter/types"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetClockinStatus(id string) any {
+func GetClockinStatus(id string) bool {
 	filter := bson.D{{"account_id", id}}
 	var database = connection.UseDatabase()
-	var res any
-	err := database.Collection("clockin_status").FindOne(context.TODO(), filter).Decode(&res)
+	err := database.Collection("clockin_status").FindOne(context.TODO(), filter)
 	if err != nil {
 		return false
 	}
 	// return json.NewEncoder(response).Encode(packages)
-	return res
+	return true
 }
 
 func UpdateClockinStatus(id string, status string) any {
-	// filter := bson.D{{"id", id}}
-	// update := bson.D{{"$set", bson.D{{"status", status}}}}
-	var insert_data struct {
-		Id     string
-		Status string
-	}
-	insert_data.Id = id
-	insert_data.Status = status
 
 	var database = connection.UseDatabase()
-	result, err := database.Collection("clockin_status").InsertOne(context.TODO(), insert_data)
+
+	var insert_data types.ClockinStatus
+	insert_data.Account_id = id
+	insert_data.Status = status
+	// packages.UpdatePackageStatus(trip_add.Id, "success")
+
+	result, err := database.Collection("clockin_status").InsertOne(context.Background(), insert_data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// return json.NewEncoder(response).Encode(vehicles)
 	return result
 }
