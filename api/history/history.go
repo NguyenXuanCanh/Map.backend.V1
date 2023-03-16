@@ -7,11 +7,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/types"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetAll() []types.History {
@@ -118,6 +120,15 @@ func AddHistory(request *http.Request) any {
 	var database = connection.UseDatabase()
 
 	packages.UpdatePackageStatus(history_add.Package_id, "success")
+	var noti types.Notification
+	noti.Account_id = history_add.Account_id
+	noti.Type = "deliveried"
+	noti.Time = primitive.NewDateTimeFromTime(time.Now())
+	_, errNoti := database.Collection("notification").InsertOne(context.Background(), noti)
+
+	if errNoti != nil {
+		log.Fatal(errNoti)
+	}
 
 	result, err := database.Collection("history").InsertOne(context.Background(), history_add)
 	if err != nil {
