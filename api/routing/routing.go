@@ -1,147 +1,208 @@
 package routing
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
+	"math"
 
+	"github.com/NguyenXuanCanh/go-starter/api/packages"
+	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
+	geo "github.com/kellydunn/golang-geo"
 )
 
-type Data struct {
-	Addresses []string `json:"addresses"`
+type Response struct {
+	DistanceMatrix    [][]int `json:"distanceMatrix"`
+	Demands           []int   `json:"demands"`
+	VehicleCapacities []int   `json:"vehicleCapacities"`
 }
 
-func CreateData() Data {
-	// """Creates the data."""
-	var data Data
-	data.Addresses = []string{
-		"159 Hung Phu, phuong 8 quan 8 TP HCM", // depot
-		"273 An Duong Vuong, phuong 3 quan 5 TP HCM",
-		// "1283 Huynh Tan Phat, quan 7",
-		"1 Nguyen Bieu Phuong 1 Quan 5 TP HCM",
-		"50 Lac Long Quan Phuong 3 Quan 11 TP HCM",
-		"17 Duong Dinh Nghe Phuong 8 Quan 11 TP HCM",
+func create_distance_matrix(locations []types.Location) [][]int {
+	// Tạo ma trận khoảng cách
+	distanceMatrix := make([][]int, len(locations))
+	for i := range distanceMatrix {
+		distanceMatrix[i] = make([]int, len(locations))
 	}
-	return data
+
+	// Tính toán khoảng cách giữa các địa chỉ và lưu vào ma trận
+	for i := 0; i < len(locations); i++ {
+		for j := 0; j < len(locations); j++ {
+			if i == j {
+				distanceMatrix[i][j] = 0
+			} else {
+				geocoder := geo.NewPoint(locations[i][1], locations[i][0])
+				geocoder2 := geo.NewPoint(locations[j][1], locations[j][0])
+				distanceMatrix[i][j] = int(math.Round(geocoder.GreatCircleDistance(geocoder2) * 1000))
+			}
+		}
+	}
+
+	return distanceMatrix
 }
 
-type Feature struct {
-	Type     string
-	Geometry struct {
-		Type        string
-		Coordinates types.Location
+func create_params(packages []types.Package) Response {
+	var res Response
+	var locations []types.Location
+
+	//init depot
+	res.Demands = append(res.Demands, 0)
+	locations = append(locations, config.GetDefaultStoreLocation())
+
+	res.VehicleCapacities = append(res.VehicleCapacities, 1)
+	for _, item := range packages {
+		res.Demands = append(res.Demands, item.Weight)
+		locations = append(locations, trips.CreateLocation(item.Description))
 	}
-	Properties struct {
-		Layer        string
-		Name         string
-		Housenumber  string
-		Street       string
-		Distance     float64
-		Accuracy     string
-		Region       string
-		Region_gid   string
-		County       string
-		County_gid   string
-		Locality     string
-		Locality_gid string
-		Label        string
-		Address      string
-		Addendum     struct{}
-		Block        int
-		Floor        int
-	}
-	Bbox types.Location
-	Id   string
+	res.DistanceMatrix = create_distance_matrix(locations)
+
+	return res
 }
 
-type Address struct {
-	Features []Feature
-	Type     string
-	bbox     types.Location
-	License  string
-}
-
-type MapType struct {
-	Code    string
-	Message string
-	Data    Address
-}
-
-func create_distance_matrix(data Data) []types.Location {
-	addresses := data.Addresses
-
-	// var distance_matrix_duration []any
-	// var distance_matrix_distance []any
-
-	var place_detail_matrix []types.Location
-	for i := 0; i < len(addresses); i++ {
-		var temp types.Location = send_request(addresses[i])
-		place_detail_matrix = append(place_detail_matrix, temp)
-	}
-
-	// store_location := fmt.Sprintf("%f", place_detail_matrix[0].features[0].geometry.coordinates) + "," + fmt.Sprintf("%f", place_detail_matrix[0].Geometry.Location.Lng)
-	// way_points := ""
-	// // Send q requests, returning max_rows rows per request.
-	// for i := 1; i < len(place_detail_matrix); i++ {
-	// 	way_points += fmt.Sprintf("%f", place_detail_matrix[i].Geometry.Location.Lat) + "," + fmt.Sprintf("%f", place_detail_matrix[i].Geometry.Location.Lng)
-	// 	if i != len(place_detail_matrix)-1 {
-	// 		way_points += ";"
-	// 	}
-	// }
-	// response := send_request_distance_matrix(store_location, way_points)
-	// fmt.Print(response)
-	// distance_matrix_duration = append(distance_matrix_duration, response)
-
-	return place_detail_matrix
-	// return distance_matrix
-}
-
-func send_request(str string) types.Location {
-	stringReq := strings.Replace(str, " ", "%20", -1)
-	url := "https://maps.vietmap.vn/api/search?api-version=1.1&apikey=" + config.API_KEY + "&text=" + stringReq
-	res, err := http.Get(url)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	var data MapType
-	json.Unmarshal(body, &data)
-	// fmt.Println(data)
-	arrLength := len(data.Data.Features)
-	if arrLength > 0 {
-		return data.Data.Features[0].Geometry.Coordinates
-	} else {
-		return nil
-	}
-}
-
-// func send_request_distance_matrix(origin_address string, dest_address string) any {
-// 	// stringReq := strings.Replace(str, " ", "%20", -1)
-// 	url := "https://rsapi.goong.io/trip?origin=" + origin_address + "&waypoints=" + dest_address + "&api_key=" + config.API_KEY
-// 	res, err := http.Get(url)
-
-// 	body, err := ioutil.ReadAll(res.Body)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	var data MapType
-// 	json.Unmarshal(body, &data)
-// 	fmt.Println(data)
-// 	return data
-// }
-
-func Main() []types.Location {
-	// """Entry point of the program"""
-	// # Create the data.
-	data := CreateData()
-	distance_matrix := create_distance_matrix(data)
+func Main() Response {
+	// create_distance_matrix()
+	var packages = packages.GetAll()
+	distance_matrix := create_params(packages)
 	return distance_matrix
 }
+
+// package org.or_tools.example;
+// import com.google.ortools.Loader;
+// import com.google.ortools.constraintsolver.Assignment;
+// import com.google.ortools.constraintsolver.FirstSolutionStrategy;
+// import com.google.ortools.constraintsolver.LocalSearchMetaheuristic;
+// import com.google.ortools.constraintsolver.RoutingIndexManager;
+// import com.google.ortools.constraintsolver.RoutingModel;
+// import com.google.ortools.constraintsolver.RoutingSearchParameters;
+// import com.google.ortools.constraintsolver.main;
+// import com.google.protobuf.Duration;
+// import java.util.logging.Logger;
+
+// /** Minimal VRP.*/
+// public class BasicExample {
+//   private static final Logger logger = Logger.getLogger(BasicExample.class.getName());
+
+//   static class DataModel {
+//     public final long[][] distanceMatrix = {
+//         {0, 548, 776, 696, 582, 274, 502, 194, 308, 194, 536, 502, 388, 354, 468, 776, 662},
+//         {548, 0, 684, 308, 194, 502, 730, 354, 696, 742, 1084, 594, 480, 674, 1016, 868, 1210},
+//         {776, 684, 0, 992, 878, 502, 274, 810, 468, 742, 400, 1278, 1164, 1130, 788, 1552, 754},
+//         {696, 308, 992, 0, 114, 650, 878, 502, 844, 890, 1232, 514, 628, 822, 1164, 560, 1358},
+//         {582, 194, 878, 114, 0, 536, 764, 388, 730, 776, 1118, 400, 514, 708, 1050, 674, 1244},
+//         {274, 502, 502, 650, 536, 0, 228, 308, 194, 240, 582, 776, 662, 628, 514, 1050, 708},
+//         {502, 730, 274, 878, 764, 228, 0, 536, 194, 468, 354, 1004, 890, 856, 514, 1278, 480},
+//         {194, 354, 810, 502, 388, 308, 536, 0, 342, 388, 730, 468, 354, 320, 662, 742, 856},
+//         {308, 696, 468, 844, 730, 194, 194, 342, 0, 274, 388, 810, 696, 662, 320, 1084, 514},
+//         {194, 742, 742, 890, 776, 240, 468, 388, 274, 0, 342, 536, 422, 388, 274, 810, 468},
+//         {536, 1084, 400, 1232, 1118, 582, 354, 730, 388, 342, 0, 878, 764, 730, 388, 1152, 354},
+//         {502, 594, 1278, 514, 400, 776, 1004, 468, 810, 536, 878, 0, 114, 308, 650, 274, 844},
+//         {388, 480, 1164, 628, 514, 662, 890, 354, 696, 422, 764, 114, 0, 194, 536, 388, 730},
+//         {354, 674, 1130, 822, 708, 628, 856, 320, 662, 388, 730, 308, 194, 0, 342, 422, 536},
+//         {468, 1016, 788, 1164, 1050, 514, 514, 662, 320, 274, 388, 650, 536, 342, 0, 764, 194},
+//         {776, 868, 1552, 560, 674, 1050, 1278, 742, 1084, 810, 1152, 274, 388, 422, 764, 0, 798},
+//         {662, 1210, 754, 1358, 1244, 708, 480, 856, 514, 468, 354, 844, 730, 536, 194, 798, 0},
+//     };
+//     public final long[] demands = {0, 1, 1, 3, 6, 3, 6, 8, 8, 1, 2, 1, 2, 6, 6, 8, 8};
+//     public final long[] vehicleCapacities = {15};
+//     public final int vehicleNumber = 1;
+//     public final int depot = 0;
+//   }
+
+//   /// @brief Print the solution.
+//   static void printSolution(
+//       DataModel data, RoutingModel routing, RoutingIndexManager manager, Assignment solution) {
+//     // Solution cost.
+//     logger.info("Objective: " + solution.objectiveValue());
+//     // Inspect solution.
+//     // Display dropped nodes.
+//     String droppedNodes = "Dropped nodes:";
+//     for (int node = 0; node < routing.size(); ++node) {
+//       if (routing.isStart(node) || routing.isEnd(node)) {
+//         continue;
+//       }
+//       if (solution.value(routing.nextVar(node)) == node) {
+//         droppedNodes += " " + manager.indexToNode(node);
+//       }
+//     }
+//     logger.info(droppedNodes);
+//     // Display routes
+//     long totalDistance = 0;
+//     long totalLoad = 0;
+//     for (int i = 0; i < data.vehicleNumber; ++i) {
+//       long index = routing.start(i);
+//       logger.info("Route for Vehicle " + i + ":");
+//       long routeDistance = 0;
+//       long routeLoad = 0;
+//       String route = "";
+//       while (!routing.isEnd(index)) {
+//         long nodeIndex = manager.indexToNode(index);
+//         routeLoad += data.demands[(int) nodeIndex];
+//         route += nodeIndex + " Load(" + routeLoad + ") -> ";
+//         long previousIndex = index;
+//         index = solution.value(routing.nextVar(index));
+//         routeDistance += routing.getArcCostForVehicle(previousIndex, index, i);
+//       }
+//       route += manager.indexToNode(routing.end(i));
+//       logger.info(route);
+//       logger.info("Distance of the route: " + routeDistance + "m");
+//       totalDistance += routeDistance;
+//       totalLoad += routeLoad;
+//     }
+//     logger.info("Total Distance of all routes: " + totalDistance + "m");
+//     logger.info("Total Load of all routes: " + totalLoad);
+//   }
+
+//   public static void main(String[] args) throws Exception {
+//     Loader.loadNativeLibraries();
+//     // Instantiate the data problem.
+//     final DataModel data = new DataModel();
+
+//     // Create Routing Index Manager
+//     RoutingIndexManager manager =
+//         new RoutingIndexManager(data.distanceMatrix.length, data.vehicleNumber, data.depot);
+
+//     // Create Routing Model.
+//     RoutingModel routing = new RoutingModel(manager);
+
+//     // Create and register a transit callback.
+//     final int transitCallbackIndex =
+//         routing.registerTransitCallback((long fromIndex, long toIndex) -> {
+//           // Convert from routing variable Index to user NodeIndex.
+//           int fromNode = manager.indexToNode(fromIndex);
+//           int toNode = manager.indexToNode(toIndex);
+//           return data.distanceMatrix[fromNode][toNode];
+//         });
+
+//     // Define cost of each arc.
+//     routing.setArcCostEvaluatorOfAllVehicles(transitCallbackIndex);
+
+//     // Add Capacity constraint.
+//     final int demandCallbackIndex = routing.registerUnaryTransitCallback((long fromIndex) -> {
+//       // Convert from routing variable Index to user NodeIndex.
+//       int fromNode = manager.indexToNode(fromIndex);
+//       return data.demands[fromNode];
+//     });
+//     routing.addDimensionWithVehicleCapacity(demandCallbackIndex, 0, // null capacity slack
+//         data.vehicleCapacities, // vehicle maximum capacities
+//         true, // start cumul to zero
+//         "Capacity");
+//     // Allow to drop nodes.
+//     long penalty = 1000;
+//     for (int i = 1; i < data.distanceMatrix.length; ++i) {
+//       routing.addDisjunction(new long[] {manager.nodeToIndex(i)}, penalty);
+//     }
+
+//     // Setting first solution heuristic.
+//     RoutingSearchParameters searchParameters =
+//         main.defaultRoutingSearchParameters()
+//             .toBuilder()
+//             .setFirstSolutionStrategy(FirstSolutionStrategy.Value.PATH_CHEAPEST_ARC)
+//             .setLocalSearchMetaheuristic(LocalSearchMetaheuristic.Value.GUIDED_LOCAL_SEARCH)
+//             .setTimeLimit(Duration.newBuilder().setSeconds(1).build())
+//             .build();
+
+//     // Solve the problem.
+//     Assignment solution = routing.solveWithParameters(searchParameters);
+
+//     // Print solution on console.
+//     printSolution(data, routing, manager, solution);
+//   }
+// }

@@ -12,6 +12,7 @@ import (
 	"github.com/NguyenXuanCanh/go-starter/api/history"
 	"github.com/NguyenXuanCanh/go-starter/api/notification"
 	"github.com/NguyenXuanCanh/go-starter/api/profile"
+	"github.com/NguyenXuanCanh/go-starter/api/routing"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
 
@@ -219,6 +220,18 @@ func UpdateImageProfile(writer http.ResponseWriter, request *http.Request, ps ht
 	}
 }
 
+func GetTest(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		Data:   routing.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func main() {
 	// router := mux.NewRouter()
 	router := httprouter.New()
@@ -228,13 +241,19 @@ func main() {
 	router.GET("/vehicle", GetVehicle)
 	router.GET("/vehicle/:id", GetVehicle)
 	router.POST("/vehicle_add", AddVehicle)
+
 	router.POST("/history_add", AddHistory)
-	router.POST("/user_image_update", UpdateImageProfile)
 	router.GET("/history/:id", GetHistoryByAccountId)
+
+	router.POST("/user_image_update", UpdateImageProfile)
+
 	router.GET("/trip/:id", GetTrip)
 	router.GET("/generate_trip/:id", GenTrip)
+	router.GET("/GetTest", GetTest)
+
 	router.GET("/clockin_status/:id", GetClockinStatus)
 	router.GET("/clockin_status_update/:id/:status", UpdateClockinStatus)
+
 	router.GET("/notification/:id", GetNotificationByAccountId)
 	router.POST("/notification_add", AddNotification)
 
