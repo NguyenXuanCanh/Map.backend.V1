@@ -1,7 +1,11 @@
 package routing
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"math"
+	"net/http"
 
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/api/trips"
@@ -10,10 +14,16 @@ import (
 	geo "github.com/kellydunn/golang-geo"
 )
 
-type Response struct {
+type Params struct {
 	DistanceMatrix    [][]int `json:"distanceMatrix"`
 	Demands           []int   `json:"demands"`
 	VehicleCapacities []int   `json:"vehicleCapacities"`
+}
+
+type Response struct {
+	// DistanceMatrix    [][]int `json:"distanceMatrix"`
+	// Demands           []int   `json:"demands"`
+	// VehicleCapacities []int   `json:"vehicleCapacities"`
 }
 
 func create_distance_matrix(locations []types.Location) [][]int {
@@ -39,8 +49,8 @@ func create_distance_matrix(locations []types.Location) [][]int {
 	return distanceMatrix
 }
 
-func create_params(packages []types.Package) Response {
-	var res Response
+func create_params(packages []types.Package) Params {
+	var res Params
 	var locations []types.Location
 
 	//init depot
@@ -57,11 +67,38 @@ func create_params(packages []types.Package) Response {
 	return res
 }
 
-func Main() Response {
+func routing_post(data Params) any { //Response
+	url := "http://localhost:8081/get_trip"
+
+	values := map[string]interface{}{
+		"distance_matrix":    data.DistanceMatrix,
+		"demands":            data.Demands,
+		"vehicle_capacities": data.VehicleCapacities,
+	}
+	json_data, err := json.Marshal(values)
+
+	resp, err := http.Post(url, "application/json",
+		bytes.NewBuffer(json_data))
+
+	if err != nil {
+		fmt.Printf("could not marshal json: %s\n", err)
+		return ""
+	}
+
+	var res map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&res)
+	// fmt.Println(res)
+	// return res
+	return res
+}
+
+func Main() any {
 	// create_distance_matrix()
 	var packages = packages.GetAll()
 	distance_matrix := create_params(packages)
-	return distance_matrix
+
+	resp := routing_post(distance_matrix)
+	return resp
 }
 
 // package org.or_tools.example;
