@@ -13,7 +13,6 @@ import (
 	"github.com/NguyenXuanCanh/go-starter/api/notification"
 	"github.com/NguyenXuanCanh/go-starter/api/profile"
 	"github.com/NguyenXuanCanh/go-starter/api/routing"
-	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/api/vehicles"
 
 	"net/http"
@@ -98,7 +97,8 @@ func GenTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Pa
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: trips.CreateTrip(writer, request, id),
+		// Data: trips.CreateTrip(writer, request, id),
+		Data: routing.CreateTrip(id),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
@@ -113,7 +113,7 @@ func GetTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Pa
 	response := Response{
 		Status: "OK",
 		// Data:   compute_routes.GetComputeRoutes(),
-		Data: trips.GetTrips(id),
+		Data: routing.GetTrips(id),
 		// Data: packages.Main(),
 	}
 	err := json.NewEncoder(writer).Encode(response)
@@ -222,9 +222,10 @@ func UpdateImageProfile(writer http.ResponseWriter, request *http.Request, ps ht
 
 func GetTest(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	// api.TestGetAPI()
+	var id = ps.ByName("id")
 	response := Response{
 		Status: "OK",
-		Data:   routing.Main(),
+		Data:   routing.CreateTrip(id),
 	}
 	err := json.NewEncoder(writer).Encode(response)
 	if err != nil {

@@ -23,6 +23,7 @@ type Package struct {
 	Description string             `json:"description"`
 	Volume      int                `json:"volume"`
 	Weight      int                `json:"weight"`
+	Type        int                `json:"type"`
 }
 
 type Trip struct {
@@ -106,13 +107,6 @@ type ProfileImage struct {
 	Account_id string           `json:"account_id"`
 	Image      primitive.Binary `json:"image"`
 }
-
-type TripRes struct {
-	Id         primitive.ObjectID `bson:"_id,omitempty"`
-	Account_id string             `json:"account_id"`
-	Trip_data  TripDB             `json:"trip_data"`
-}
-
 type TripDB struct {
 	Code   int `json:"code"`
 	Sumary struct {

@@ -2,28 +2,51 @@ package routing
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 
+	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
-	"github.com/NguyenXuanCanh/go-starter/api/trips"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
 	geo "github.com/kellydunn/golang-geo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Params struct {
 	DistanceMatrix    [][]int `json:"distanceMatrix"`
 	Demands           []int   `json:"demands"`
 	VehicleCapacities []int   `json:"vehicleCapacities"`
+	VehicleNumber     int     `json:"vehicleNumber"`
+	Depot             int     `json:"depot"`
+}
+
+type Solution struct {
+	Dropped_package []int `json:"dropped_package"`
+	Route           []int `json:"route"`
+	Route_distance  []int `json:"route_list"`
+	Route_load      []int `json:"route_load"`
+	Total_distance  int   `json:"total_distance"`
+	Total_load      int   `json:"total_load"`
 }
 
 type Response struct {
-	// DistanceMatrix    [][]int `json:"distanceMatrix"`
-	// Demands           []int   `json:"demands"`
-	// VehicleCapacities []int   `json:"vehicleCapacities"`
+	Routes         []types.Package `json:"routes"`
+	Route_distance []int           `json:"route_list"`
+	Route_load     []int           `json:"route_load"`
+	Total_distance int             `json:"total_distance"`
+	Total_load     int             `json:"total_load"`
+}
+
+type TripRes struct {
+	Id         primitive.ObjectID `bson:"_id,omitempty"`
+	Account_id string             `json:"account_id"`
+	Trip_data  Response           `json:"trip_data"`
 }
 
 func create_distance_matrix(locations []types.Location) [][]int {
@@ -57,189 +80,118 @@ func create_params(packages []types.Package) Params {
 	res.Demands = append(res.Demands, 0)
 	locations = append(locations, config.GetDefaultStoreLocation())
 
-	res.VehicleCapacities = append(res.VehicleCapacities, 1)
+	res.VehicleCapacities = append(res.VehicleCapacities, 1500)
 	for _, item := range packages {
 		res.Demands = append(res.Demands, item.Weight)
-		locations = append(locations, trips.CreateLocation(item.Description))
+		locations = append(locations, item.Location)
 	}
 	res.DistanceMatrix = create_distance_matrix(locations)
 
+	res.VehicleNumber = 1
+	res.Depot = 0
 	return res
 }
 
-func routing_post(data Params) any { //Response
-	url := "http://localhost:8081/get_trip"
+func routing_post(data Params) Solution { //Response
+	url := "http://localhost:8081/route"
 
-	values := map[string]interface{}{
-		"distance_matrix":    data.DistanceMatrix,
-		"demands":            data.Demands,
-		"vehicle_capacities": data.VehicleCapacities,
+	values := Params{
+		DistanceMatrix:    data.DistanceMatrix,
+		Demands:           data.Demands,
+		VehicleCapacities: data.VehicleCapacities,
+		VehicleNumber:     data.VehicleNumber,
+		Depot:             data.Depot,
 	}
 	json_data, err := json.Marshal(values)
 
-	resp, err := http.Post(url, "application/json",
-		bytes.NewBuffer(json_data))
-
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(json_data))
 	if err != nil {
-		fmt.Printf("could not marshal json: %s\n", err)
-		return ""
+		fmt.Println(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	var res map[string]interface{}
+	var res Solution
 	json.NewDecoder(resp.Body).Decode(&res)
 	// fmt.Println(res)
 	// return res
 	return res
 }
 
-func Main() any {
+func CreateTripSolution() Response {
 	// create_distance_matrix()
-	var packages = packages.GetAll()
-	distance_matrix := create_params(packages)
+	var packages_list = packages.GetPackageWaiting() // get wating only
 
-	resp := routing_post(distance_matrix)
+	for index := range packages_list {
+		packages_list[index].Location = CreateLocation(packages_list[index].Description)
+	}
+
+	distance_matrix := create_params(packages_list)
+
+	solution := routing_post(distance_matrix)
+
+	var resp Response
+	resp.Route_distance = solution.Route_distance
+	resp.Route_load = solution.Route_load
+	resp.Total_distance = solution.Total_distance
+	resp.Total_load = solution.Total_load
+
+	var store types.Package
+	store.Id = 0
+	store.Location = config.GetDefaultStoreLocation()
+	resp.Routes = append(resp.Routes, store)
+
+	for _, item := range solution.Route {
+		if item != 0 {
+			fmt.Println(packages_list[item]) // log used packages
+			// change status to delivering
+			resp.Routes = append(resp.Routes, packages_list[item])
+			packages.UpdatePackageStatus(packages_list[item].Id, "delivering")
+		}
+	}
+
 	return resp
 }
 
-// package org.or_tools.example;
-// import com.google.ortools.Loader;
-// import com.google.ortools.constraintsolver.Assignment;
-// import com.google.ortools.constraintsolver.FirstSolutionStrategy;
-// import com.google.ortools.constraintsolver.LocalSearchMetaheuristic;
-// import com.google.ortools.constraintsolver.RoutingIndexManager;
-// import com.google.ortools.constraintsolver.RoutingModel;
-// import com.google.ortools.constraintsolver.RoutingSearchParameters;
-// import com.google.ortools.constraintsolver.main;
-// import com.google.protobuf.Duration;
-// import java.util.logging.Logger;
+func Save(res any, id string) any {
+	var database = connection.UseDatabase()
+	var trip_add struct {
+		Account_id string
+		Trip_data  any
+	}
+	trip_add.Account_id = id
+	trip_add.Trip_data = res
+	// packages.UpdatePackageStatus(trip_add.Id, "success")
 
-// /** Minimal VRP.*/
-// public class BasicExample {
-//   private static final Logger logger = Logger.getLogger(BasicExample.class.getName());
+	result, err := database.Collection("trips").InsertOne(context.Background(), trip_add)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-//   static class DataModel {
-//     public final long[][] distanceMatrix = {
-//         {0, 548, 776, 696, 582, 274, 502, 194, 308, 194, 536, 502, 388, 354, 468, 776, 662},
-//         {548, 0, 684, 308, 194, 502, 730, 354, 696, 742, 1084, 594, 480, 674, 1016, 868, 1210},
-//         {776, 684, 0, 992, 878, 502, 274, 810, 468, 742, 400, 1278, 1164, 1130, 788, 1552, 754},
-//         {696, 308, 992, 0, 114, 650, 878, 502, 844, 890, 1232, 514, 628, 822, 1164, 560, 1358},
-//         {582, 194, 878, 114, 0, 536, 764, 388, 730, 776, 1118, 400, 514, 708, 1050, 674, 1244},
-//         {274, 502, 502, 650, 536, 0, 228, 308, 194, 240, 582, 776, 662, 628, 514, 1050, 708},
-//         {502, 730, 274, 878, 764, 228, 0, 536, 194, 468, 354, 1004, 890, 856, 514, 1278, 480},
-//         {194, 354, 810, 502, 388, 308, 536, 0, 342, 388, 730, 468, 354, 320, 662, 742, 856},
-//         {308, 696, 468, 844, 730, 194, 194, 342, 0, 274, 388, 810, 696, 662, 320, 1084, 514},
-//         {194, 742, 742, 890, 776, 240, 468, 388, 274, 0, 342, 536, 422, 388, 274, 810, 468},
-//         {536, 1084, 400, 1232, 1118, 582, 354, 730, 388, 342, 0, 878, 764, 730, 388, 1152, 354},
-//         {502, 594, 1278, 514, 400, 776, 1004, 468, 810, 536, 878, 0, 114, 308, 650, 274, 844},
-//         {388, 480, 1164, 628, 514, 662, 890, 354, 696, 422, 764, 114, 0, 194, 536, 388, 730},
-//         {354, 674, 1130, 822, 708, 628, 856, 320, 662, 388, 730, 308, 194, 0, 342, 422, 536},
-//         {468, 1016, 788, 1164, 1050, 514, 514, 662, 320, 274, 388, 650, 536, 342, 0, 764, 194},
-//         {776, 868, 1552, 560, 674, 1050, 1278, 742, 1084, 810, 1152, 274, 388, 422, 764, 0, 798},
-//         {662, 1210, 754, 1358, 1244, 708, 480, 856, 514, 468, 354, 844, 730, 536, 194, 798, 0},
-//     };
-//     public final long[] demands = {0, 1, 1, 3, 6, 3, 6, 8, 8, 1, 2, 1, 2, 6, 6, 8, 8};
-//     public final long[] vehicleCapacities = {15};
-//     public final int vehicleNumber = 1;
-//     public final int depot = 0;
-//   }
+	// return json.NewEncoder(response).Encode(vehicles)
+	return result
+}
 
-//   /// @brief Print the solution.
-//   static void printSolution(
-//       DataModel data, RoutingModel routing, RoutingIndexManager manager, Assignment solution) {
-//     // Solution cost.
-//     logger.info("Objective: " + solution.objectiveValue());
-//     // Inspect solution.
-//     // Display dropped nodes.
-//     String droppedNodes = "Dropped nodes:";
-//     for (int node = 0; node < routing.size(); ++node) {
-//       if (routing.isStart(node) || routing.isEnd(node)) {
-//         continue;
-//       }
-//       if (solution.value(routing.nextVar(node)) == node) {
-//         droppedNodes += " " + manager.indexToNode(node);
-//       }
-//     }
-//     logger.info(droppedNodes);
-//     // Display routes
-//     long totalDistance = 0;
-//     long totalLoad = 0;
-//     for (int i = 0; i < data.vehicleNumber; ++i) {
-//       long index = routing.start(i);
-//       logger.info("Route for Vehicle " + i + ":");
-//       long routeDistance = 0;
-//       long routeLoad = 0;
-//       String route = "";
-//       while (!routing.isEnd(index)) {
-//         long nodeIndex = manager.indexToNode(index);
-//         routeLoad += data.demands[(int) nodeIndex];
-//         route += nodeIndex + " Load(" + routeLoad + ") -> ";
-//         long previousIndex = index;
-//         index = solution.value(routing.nextVar(index));
-//         routeDistance += routing.getArcCostForVehicle(previousIndex, index, i);
-//       }
-//       route += manager.indexToNode(routing.end(i));
-//       logger.info(route);
-//       logger.info("Distance of the route: " + routeDistance + "m");
-//       totalDistance += routeDistance;
-//       totalLoad += routeLoad;
-//     }
-//     logger.info("Total Distance of all routes: " + totalDistance + "m");
-//     logger.info("Total Load of all routes: " + totalLoad);
-//   }
+func CreateTrip(id string) any {
+	var res = CreateTripSolution()
+	// fmt.Println(res)
+	return Save(res, id)
+}
 
-//   public static void main(String[] args) throws Exception {
-//     Loader.loadNativeLibraries();
-//     // Instantiate the data problem.
-//     final DataModel data = new DataModel();
+func GetTrips(id string) Response {
+	var database = connection.UseDatabase()
 
-//     // Create Routing Index Manager
-//     RoutingIndexManager manager =
-//         new RoutingIndexManager(data.distanceMatrix.length, data.vehicleNumber, data.depot);
-
-//     // Create Routing Model.
-//     RoutingModel routing = new RoutingModel(manager);
-
-//     // Create and register a transit callback.
-//     final int transitCallbackIndex =
-//         routing.registerTransitCallback((long fromIndex, long toIndex) -> {
-//           // Convert from routing variable Index to user NodeIndex.
-//           int fromNode = manager.indexToNode(fromIndex);
-//           int toNode = manager.indexToNode(toIndex);
-//           return data.distanceMatrix[fromNode][toNode];
-//         });
-
-//     // Define cost of each arc.
-//     routing.setArcCostEvaluatorOfAllVehicles(transitCallbackIndex);
-
-//     // Add Capacity constraint.
-//     final int demandCallbackIndex = routing.registerUnaryTransitCallback((long fromIndex) -> {
-//       // Convert from routing variable Index to user NodeIndex.
-//       int fromNode = manager.indexToNode(fromIndex);
-//       return data.demands[fromNode];
-//     });
-//     routing.addDimensionWithVehicleCapacity(demandCallbackIndex, 0, // null capacity slack
-//         data.vehicleCapacities, // vehicle maximum capacities
-//         true, // start cumul to zero
-//         "Capacity");
-//     // Allow to drop nodes.
-//     long penalty = 1000;
-//     for (int i = 1; i < data.distanceMatrix.length; ++i) {
-//       routing.addDisjunction(new long[] {manager.nodeToIndex(i)}, penalty);
-//     }
-
-//     // Setting first solution heuristic.
-//     RoutingSearchParameters searchParameters =
-//         main.defaultRoutingSearchParameters()
-//             .toBuilder()
-//             .setFirstSolutionStrategy(FirstSolutionStrategy.Value.PATH_CHEAPEST_ARC)
-//             .setLocalSearchMetaheuristic(LocalSearchMetaheuristic.Value.GUIDED_LOCAL_SEARCH)
-//             .setTimeLimit(Duration.newBuilder().setSeconds(1).build())
-//             .build();
-
-//     // Solve the problem.
-//     Assignment solution = routing.solveWithParameters(searchParameters);
-
-//     // Print solution on console.
-//     printSolution(data, routing, manager, solution);
-//   }
-// }
+	var tripRes TripRes
+	filter := bson.D{{"account_id", id}}
+	err := database.Collection("trips").FindOne(context.TODO(), filter).Decode(&tripRes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Println(tripRes)
+	// return json.NewEncoder(response).Encode(trips)
+	return tripRes.Trip_data
+}

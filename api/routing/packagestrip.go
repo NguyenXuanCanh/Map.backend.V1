@@ -1,4 +1,4 @@
-package trips
+package routing
 
 import (
 	"encoding/json"
