@@ -5,15 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
-	"math"
 	"net/http"
 
 	"github.com/NguyenXuanCanh/go-starter/api/connection"
 	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
-	geo "github.com/kellydunn/golang-geo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -47,6 +46,41 @@ type TripRes struct {
 	Id         primitive.ObjectID `bson:"_id,omitempty"`
 	Account_id string             `json:"account_id"`
 	Trip_data  Response           `json:"trip_data"`
+	Steps      int                `json:"steps"`
+}
+
+type DistanceResponse struct {
+	// Geocoded_waypoints []float64 `json:"geocoded_waypoints"`
+	Routes []struct {
+		Legs struct {
+			Distance struct {
+				Text  string `json:"text"`
+				Value int    `json:"value"`
+			} `json:"distance"`
+		} `json:"legs"`
+		Overview_polyline struct {
+			Points string `json:"points"`
+		} `json:"overview_polyline"`
+		// Warnings       []float64 `json:"warnings"`
+		// Waypoint_order []float64 `json:"waypoint_order"`
+	} `json:"routes"`
+}
+
+type OSMRes struct {
+	Code   string `json:"code"`
+	Routes []struct {
+		Legs        []int   `json:"legs"`
+		Weight_name string  `json:"weight_name"`
+		Weight      float64 `json:"weight"`
+		Duration    float64 `json:"duration"`
+		Distance    float64 `json:"distance"`
+	} `json:"routes"`
+	Waypoints []struct {
+		Hint     string `json:"hint"`
+		Distance string `json:"distance"`
+		Name     string `json:"name"`
+		Location types.Location
+	} `json:"waypoints"`
 }
 
 func create_distance_matrix(locations []types.Location) [][]int {
@@ -62,14 +96,40 @@ func create_distance_matrix(locations []types.Location) [][]int {
 			if i == j {
 				distanceMatrix[i][j] = 0
 			} else {
-				geocoder := geo.NewPoint(locations[i][1], locations[i][0])
-				geocoder2 := geo.NewPoint(locations[j][1], locations[j][0])
-				distanceMatrix[i][j] = int(math.Round(geocoder.GreatCircleDistance(geocoder2) * 1000))
+				distanceMatrix[i][j] = create_distance(locations[i], locations[j])
+				// geocoder := geo.NewPoint(locations[i][1], locations[i][0])
+				// geocoder2 := geo.NewPoint(locations[j][1], locations[j][0])
+				// distanceMatrix[i][j] = int(math.Round(geocoder.GreatCircleDistance(geocoder2) * 1000))
 			}
 		}
 	}
 
 	return distanceMatrix
+}
+
+func create_distance(start types.Location, end types.Location) int {
+	startLat := fmt.Sprintf("%f", start[1])
+	startLong := fmt.Sprintf("%f", start[0])
+	endLat := fmt.Sprintf("%f", end[1])
+	endLong := fmt.Sprintf("%f", end[0])
+	url := "https://routing.openstreetmap.de/routed-bike/route/v1/driving/" + startLong + "," + startLat + ";" + endLong + "," + endLat + "?overview=false&alternatives=true&steps=false"
+	// url := "https://rsapi.goong.io/Direction?origin=" + startLat + "," + startLong + "&destination=" + endLat + "," + endLong + "&vehicle=car&api_key=rvWoa97j8PhzM5VUA0cr1IGNNNm5X81HoIN8GET6"
+	fmt.Println(url)
+	res, err := http.Get(url)
+	if err != nil {
+		fmt.Println(err)
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var data OSMRes
+	json.Unmarshal(body, &data)
+	fmt.Println(data)
+	if data.Code == "Ok" {
+		return int(data.Routes[0].Distance)
+	}
+	return -1
 }
 
 func create_params(packages []types.Package) Params {
@@ -117,7 +177,6 @@ func routing_post(data Params) Solution { //Response
 
 	var res Solution
 	json.NewDecoder(resp.Body).Decode(&res)
-	// fmt.Println(res)
 	// return res
 	return res
 }
@@ -145,12 +204,13 @@ func CreateTripSolution() Response {
 	store.Location = config.GetDefaultStoreLocation()
 	resp.Routes = append(resp.Routes, store)
 
-	for _, item := range solution.Route {
-		if item != 0 {
-			fmt.Println(packages_list[item]) // log used packages
+	for _, index := range solution.Route {
+		if index != 0 {
+			// bug here
+			fmt.Println(packages_list[index-1]) // log used packages
 			// change status to delivering
-			resp.Routes = append(resp.Routes, packages_list[item])
-			packages.UpdatePackageStatus(packages_list[item].Id, "delivering")
+			packages.UpdatePackageStatus(packages_list[index-1].Id, "delivering")
+			resp.Routes = append(resp.Routes, packages_list[index-1])
 		}
 	}
 
@@ -182,7 +242,7 @@ func CreateTrip(id string) any {
 	return Save(res, id)
 }
 
-func GetTrips(id string) Response {
+func GetTrips(id string) TripRes {
 	var database = connection.UseDatabase()
 
 	var tripRes TripRes
@@ -193,5 +253,32 @@ func GetTrips(id string) Response {
 	}
 	// fmt.Println(tripRes)
 	// return json.NewEncoder(response).Encode(trips)
-	return tripRes.Trip_data
+
+	return tripRes
+}
+
+type StepIdTrip struct {
+	Account_id string `json:"account_id"`
+	Steps      int    `json:"steps"`
+}
+
+func UpdateStepTrip(request *http.Request) any {
+	decoder := json.NewDecoder(request.Body)
+	var step_id StepIdTrip
+	errDecode := decoder.Decode(&step_id)
+	if errDecode != nil {
+		panic(errDecode)
+	}
+	var database = connection.UseDatabase()
+
+	filter := bson.D{{"account_id", step_id.Account_id}}
+	update := bson.D{{"$set", bson.D{{"steps", step_id.Steps}}}}
+
+	result, err := database.Collection("trips").UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// return json.NewEncoder(response).Encode(vehicles)
+	return result
 }

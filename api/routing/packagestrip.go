@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/NguyenXuanCanh/go-starter/api/packages"
 	"github.com/NguyenXuanCanh/go-starter/config"
 	"github.com/NguyenXuanCanh/go-starter/types"
 )
@@ -58,6 +57,28 @@ type MapType struct {
 	Data    Address
 }
 
+type GoongRes struct {
+	Status    string `json:"status"`
+	Plus_code any
+	Results   []struct {
+		Address_components []any  `json:"address_components"`
+		Formatted_address  string `json:"formatted_address"`
+		Geometry           struct {
+			Location struct {
+				Lat float64 `json:"lat"`
+				Lng float64 `json:"lng"`
+			} `json:"location"`
+		} `json:"geometry"`
+		Place_id  string `json:"place_id"`
+		Reference string `json:"reference"`
+		Plus_code struct {
+			Compound_code string `json:"compound_code"`
+			Global_code   string `json:"global_code"`
+		} `json:"plus_code"`
+		Types []any `json:"types"`
+	} `json:"results"`
+}
+
 func CreateLocation(str string) types.Location {
 	stringReq := strings.Replace(str, " ", "%20", -1)
 	url := "https://maps.vietmap.vn/api/search?api-version=1.1&apikey=" + config.API_KEY + "&text=" + stringReq
@@ -81,11 +102,37 @@ func CreateLocation(str string) types.Location {
 	}
 }
 
-func CreatePackageWayPoint() []types.Package {
-	data := packages.GetPackageWaiting()
-	for i := 0; i < len(data); i++ {
-		location := CreateLocation(data[i].Description)
-		data[i].Location = location
+func CreateLocationGoong(str string) types.Location {
+	stringReq := strings.Replace(str, " ", "%20", -1)
+	url := "https://rsapi.goong.io/geocode?address=" + stringReq + "&api_key=" + "rvWoa97j8PhzM5VUA0cr1IGNNNm5X81HoIN8GET6"
+	res, err := http.Get(url)
+	if err != nil {
+		fmt.Println(err)
 	}
-	return data
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var data GoongRes
+	json.Unmarshal(body, &data)
+	// fmt.Println(data)
+	arrLength := len(data.Results)
+	if arrLength > 0 {
+		var location types.Location
+		location = append(location, data.Results[0].Geometry.Location.Lng)
+		location = append(location, data.Results[0].Geometry.Location.Lat)
+		return location
+	} else {
+		return nil
+	}
 }
+
+// func CreatePackageWayPoint() []types.Package {
+// 	data := packages.GetPackageWaiting()
+// 	for i := 0; i < len(data); i++ {
+// 		location := CreateLocationGoong(data[i].Description)
+// 		data[i].Location = location
+// 	}
+// 	return data
+// }

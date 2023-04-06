@@ -233,6 +233,18 @@ func GetTest(writer http.ResponseWriter, request *http.Request, ps httprouter.Pa
 	}
 }
 
+func UpdateStepTrip(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		Data:   routing.UpdateStepTrip(request),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func main() {
 	// router := mux.NewRouter()
 	router := httprouter.New()
@@ -249,6 +261,7 @@ func main() {
 	router.POST("/user_image_update", UpdateImageProfile)
 
 	router.GET("/trip/:id", GetTrip)
+	router.POST("/update_steps_trip", UpdateStepTrip)
 	router.GET("/generate_trip/:id", GenTrip)
 	router.GET("/GetTest", GetTest)
 
