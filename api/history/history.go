@@ -138,3 +138,12 @@ func AddHistory(request *http.Request) any {
 	// return json.NewEncoder(response).Encode(vehicles)
 	return result
 }
+
+func DeleteUnavailableHistory() any {
+	var database = connection.UseDatabase()
+	filter := bson.M{"package_id": bson.D{{"$in", 0}}}
+	if _, err := database.Collection("history").DeleteMany(context.TODO(), filter); err != nil {
+		// handle error
+	}
+	return ""
+}

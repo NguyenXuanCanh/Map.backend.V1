@@ -245,6 +245,18 @@ func UpdateStepTrip(writer http.ResponseWriter, request *http.Request, ps httpro
 	}
 }
 
+func DeleteUnavailableHistory(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	// api.TestGetAPI()
+	response := Response{
+		Status: "OK",
+		Data:   history.DeleteUnavailableHistory(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 func main() {
 	// router := mux.NewRouter()
 	router := httprouter.New()
@@ -267,6 +279,8 @@ func main() {
 
 	router.GET("/clockin_status/:id", GetClockinStatus)
 	router.GET("/clockin_status_update/:id/:status", UpdateClockinStatus)
+
+	router.GET("/delete_unavailable_history", DeleteUnavailableHistory)
 
 	router.GET("/notification/:id", GetNotificationByAccountId)
 	router.POST("/notification_add", AddNotification)
