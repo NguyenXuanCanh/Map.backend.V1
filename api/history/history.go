@@ -61,12 +61,35 @@ func GetHistoryById(id string) types.History {
 	return history
 }
 
-func GetHistoryByAccountId(id string) []types.HistoryRes {
+func GetHistoryByFilterData(id string, start_date string, end_date string) []types.HistoryRes {
 	// id_account, err := strconv.Atoi(id)
-	// if err != nil {
-	// 	fmt.Println(err)
+	// start_date, err_start := time.Parse("02/01/2006", start_date)
+	// end_date, err_end := time.Parse("02/01/2006", end_date)
+	// if err_start != nil {
+	// 	fmt.Println(err_start)
 	// }
-	filter := bson.D{{"account_id", id}}
+	// if err_end != nil {
+	// 	fmt.Println(err_end)
+	// }
+	t, err := time.Parse("2006-01-02", start_date)
+	if err != nil {
+		fmt.Println(err)
+	}
+	e_t, e_err := time.Parse("2006-01-02", end_date)
+	if e_err != nil {
+		fmt.Println(err)
+	}
+	s_date := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+	e_date := time.Date(e_t.Year(), e_t.Month(), e_t.Day()+1, 0, 0, 0, 0, time.UTC)
+
+	filter := bson.M{
+		"account_id": id,
+		"date": bson.M{
+			"$lte": e_date,
+			"$gte": s_date,
+		},
+	}
+
 	var database = connection.UseDatabase()
 	cur, err := database.Collection("history").Find(context.Background(), filter)
 	if err != nil {

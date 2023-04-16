@@ -76,6 +76,19 @@ func AddVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter
 	}
 }
 
+func UpdateVehicle(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	response := Response{
+		Status: "OK",
+		// Data:   compute_routes.GetComputeRoutes(),
+		Data: vehicles.UpdateVehicle(request),
+		// Data: packages.Main(),
+	}
+	err := json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 // func UpdatePackage(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 // 	var id = ps.ByName("id")
 // 	var status = ps.ByName("status")
@@ -153,13 +166,13 @@ func UpdateClockinStatus(writer http.ResponseWriter, request *http.Request, ps h
 	}
 }
 
-func GetHistoryByAccountId(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-	var id = ps.ByName("id")
+func GetHistoryByFilterData(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+	var id = request.URL.Query().Get("account_id")
+	var start_date = request.URL.Query().Get("start_date")
+	var end_date = request.URL.Query().Get("end_date")
 	response := Response{
 		Status: "OK",
-		// Data:   compute_routes.GetComputeRoutes(),
-		Data: history.GetHistoryByAccountId(id),
-		// Data: packages.Main(),
+		Data:   history.GetHistoryByFilterData(id, start_date, end_date),
 	}
 	err := json.NewEncoder(writer).Encode(response)
 	if err != nil {
@@ -196,7 +209,7 @@ func GetNotificationByAccountId(writer http.ResponseWriter, request *http.Reques
 
 func AddNotification(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 	response := Response{
-		Status: "OK",
+		Status: "OK/",
 		// Data:   compute_routes.GetComputeRoutes(),
 		Data: notification.AddNotification(request),
 		// Data: packages.Main(),
@@ -266,9 +279,10 @@ func main() {
 	router.GET("/vehicle", GetVehicle)
 	router.GET("/vehicle/:id", GetVehicle)
 	router.POST("/vehicle_add", AddVehicle)
+	router.POST("/vehicle_update", UpdateVehicle)
 
 	router.POST("/history_add", AddHistory)
-	router.GET("/history/:id", GetHistoryByAccountId)
+	router.GET("/history", GetHistoryByFilterData)
 
 	router.POST("/user_image_update", UpdateImageProfile)
 

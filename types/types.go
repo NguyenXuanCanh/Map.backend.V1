@@ -60,7 +60,7 @@ type VehicleDB struct {
 	License     string `json:"license"`
 	Owner_name  string `json:"owner_name"`
 	Tank_volume int    `json:"tank_volume"`
-	Tank_weight int    `json:"tank_weight"`
+	Tank_weight string `json:"tank_weight"`
 }
 
 type History struct {

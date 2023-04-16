@@ -59,7 +59,7 @@ func GetVehicleByAccountId(id string) types.VehicleDB {
 
 func AddVehicle(request *http.Request) any {
 	decoder := json.NewDecoder(request.Body)
-	var vehicle_add types.History
+	var vehicle_add types.VehicleDB
 	errDecode := decoder.Decode(&vehicle_add)
 	if errDecode != nil {
 		panic(errDecode)
@@ -67,6 +67,31 @@ func AddVehicle(request *http.Request) any {
 	var database = connection.UseDatabase()
 
 	result, err := database.Collection("vehicles").InsertOne(context.Background(), vehicle_add)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// return json.NewEncoder(response).Encode(vehicles)
+	return result
+}
+
+func UpdateVehicle(request *http.Request) any {
+	decoder := json.NewDecoder(request.Body)
+	var vehicle struct {
+		Account_id string `json:"account_id"`
+		Key        string `json:"key"`
+		Value      string `json:"value"`
+	}
+	errDecode := decoder.Decode(&vehicle)
+	if errDecode != nil {
+		panic(errDecode)
+	}
+	var database = connection.UseDatabase()
+
+	filter := bson.D{{"account_id", vehicle.Account_id}}
+	update := bson.D{{"$set", bson.D{{vehicle.Key, vehicle.Value}}}}
+
+	result, err := database.Collection("vehicles").UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Fatal(err)
 	}
